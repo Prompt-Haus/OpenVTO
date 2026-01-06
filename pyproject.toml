@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "openvto"
+name = "OpenVTO"
 version = "0.0.1"
 description = "Open-source toolkit for building studio-quality virtual try-ons with generative AI"
 readme = "README.md"

@@ -12,4 +12,3 @@ def test_hello():
     """Test hello world functionality."""
     vto = OpenVTO()
     assert vto.hello() == "Hello from OpenVTO!"
-

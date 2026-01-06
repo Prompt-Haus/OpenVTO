@@ -22,4 +22,3 @@ class OpenVTO:
             A hello world string.
         """
         return "Hello from OpenVTO!"
-
