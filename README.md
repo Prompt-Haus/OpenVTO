@@ -26,9 +26,20 @@ OpenVTO's goal is simple: **make it easy for teams to ship virtual try-ons that 
 
 ---
 
-## Getting Started
+## Installation
 
-*Coming soon*
+```bash
+pip install openvto
+```
+
+## Quick Start
+
+```python
+from openvto import OpenVTO
+
+vto = OpenVTO()
+print(vto.hello())  # Hello from OpenVTO!
+```
 
 ---
 
