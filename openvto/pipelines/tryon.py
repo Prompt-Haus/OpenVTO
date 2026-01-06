@@ -129,6 +129,7 @@ def generate_tryon(
                 try_on=variant,
                 avatar_hash=short_hash(avatar_bytes),
                 clothing_hash=short_hash(clothing_bytes),
+                clothing_composite=clothing_bytes,
             )
 
     # Build prompt
@@ -147,6 +148,7 @@ def generate_tryon(
         height=height,
         seed=seed,
         reference_image=avatar_bytes,
+        clothing_image=clothing_bytes,
     )
 
     # Generate try-on
@@ -189,6 +191,7 @@ def generate_tryon(
         try_on=variant,
         avatar_hash=short_hash(avatar_bytes),
         clothing_hash=short_hash(clothing_bytes),
+        clothing_composite=clothing_bytes,
     )
 
 

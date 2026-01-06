@@ -40,8 +40,8 @@ class OpenVTO:
         *,
         provider: str = "google",
         api_key: str | None = None,
-        image_model: str = ImageModel.NANO_BANANA.value,
-        video_model: str = VideoModel.VEO_31.value,
+        image_model: str = ImageModel.NANO_BANANA_PRO.value,
+        video_model: str = VideoModel.VEO_31_FAST.value,
         cache_enabled: bool = True,
         cache_dir: str | None = None,
         prompt_preset: str = "studio_v1",
@@ -109,6 +109,7 @@ class OpenVTO:
         posture: ImageInput,
         *,
         background: str = "studio",
+        keep_clothes: bool = False,
         prompt: str | None = None,
         seed: int | None = None,
     ) -> AvatarResult:
@@ -118,6 +119,8 @@ class OpenVTO:
             selfie: Selfie/face image for identity.
             posture: Full-body posture reference image.
             background: Background style ("studio", "white", "gradient", or "custom").
+            keep_clothes: If True, preserve original clothing. If False (default),
+                replace with neutral gray bodysuit for clean try-on base.
             prompt: Optional custom prompt override.
             seed: Random seed for reproducibility.
 
@@ -130,6 +133,7 @@ class OpenVTO:
             provider=self._provider,
             storage=self._storage if self.cache_enabled else None,
             background=background,
+            keep_clothes=keep_clothes,
             prompt_preset=self.prompt_preset,
             prompt_override=prompt,
             seed=seed,
@@ -206,6 +210,7 @@ class OpenVTO:
         *,
         make_video: bool = True,
         background: str = "studio",
+        keep_clothes: bool = False,
         seed: int | None = None,
     ) -> PipelineResult:
         """Run the full pipeline: avatar → try-on → video.
@@ -216,6 +221,8 @@ class OpenVTO:
             clothes: Clothing images or Outfit for try-on.
             make_video: Whether to generate video loop.
             background: Background style for avatar.
+            keep_clothes: If True, preserve original clothing in avatar.
+                If False (default), replace with neutral bodysuit.
             seed: Random seed for reproducibility.
 
         Returns:
@@ -228,6 +235,7 @@ class OpenVTO:
             selfie=selfie,
             posture=posture,
             background=background,
+            keep_clothes=keep_clothes,
             seed=seed,
         )
 

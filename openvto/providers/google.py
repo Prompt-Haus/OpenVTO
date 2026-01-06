@@ -35,8 +35,8 @@ class GoogleProvider(Provider):
     - GOOGLE_API_KEY: API key for Google AI services
     """
 
-    DEFAULT_IMAGE_MODEL = ImageModel.NANO_BANANA.value
-    DEFAULT_VIDEO_MODEL = VideoModel.VEO_31.value
+    DEFAULT_IMAGE_MODEL = ImageModel.NANO_BANANA_PRO.value
+    DEFAULT_VIDEO_MODEL = VideoModel.VEO_31_FAST.value
 
     def __init__(
         self,
@@ -124,27 +124,57 @@ class GoogleProvider(Provider):
                 provider=self.name,
             )
 
+    def _get_aspect_ratio(self, width: int, height: int) -> str:
+        """Convert dimensions to aspect ratio string."""
+        # Common aspect ratios
+        ratio = width / height
+        if abs(ratio - 9 / 16) < 0.01:
+            return "9:16"
+        elif abs(ratio - 16 / 9) < 0.01:
+            return "16:9"
+        elif abs(ratio - 1.0) < 0.01:
+            return "1:1"
+        elif abs(ratio - 4 / 3) < 0.01:
+            return "4:3"
+        elif abs(ratio - 3 / 4) < 0.01:
+            return "3:4"
+        else:
+            return "9:16"  # Default for portrait/fashion
+
+    def _extract_image_from_response(self, response: Any) -> bytes:
+        """Extract image bytes from Gemini response."""
+        # Response contains parts, find the image part
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "inline_data") and part.inline_data:
+                return part.inline_data.data
+        raise ProviderError("No image found in response", provider=self.name)
+
     def generate_image(
         self, request: ImageGenerationRequest
     ) -> ImageGenerationResponse:
-        """Generate an image using Gemini image generation."""
+        """Generate an image using Gemini generate_content with IMAGE modality."""
         client = self._ensure_client()
         start = time.perf_counter()
 
         try:
-            # TODO: Implement actual Gemini image generation API call
-            # This is a skeleton - actual implementation depends on the API
-            response = client.models.generate_images(
+            from google.genai import types
+
+            aspect_ratio = self._get_aspect_ratio(request.width, request.height)
+
+            response = client.models.generate_content(
                 model=self._image_model,
-                prompt=request.prompt,
-                config={
-                    "number_of_images": 1,
-                    "aspect_ratio": f"{request.width}:{request.height}",
-                },
+                contents=[request.prompt],
+                config=types.GenerateContentConfig(
+                    temperature=0,
+                    response_modalities=["IMAGE"],
+                    image_config=types.ImageConfig(
+                        aspect_ratio=aspect_ratio,
+                        image_size="1K",
+                    ),
+                ),
             )
 
-            # Extract image from response
-            image_data = response.generated_images[0].image.image_bytes
+            image_data = self._extract_image_from_response(response)
             latency = (time.perf_counter() - start) * 1000
 
             return ImageGenerationResponse(
@@ -161,7 +191,11 @@ class GoogleProvider(Provider):
             raise  # Should not reach here
 
     def edit_image(self, request: ImageGenerationRequest) -> ImageGenerationResponse:
-        """Edit an image using Gemini image editing."""
+        """Edit an image using Gemini generate_content with reference image.
+
+        If clothing_image is provided, both avatar and clothing images are sent
+        to the model for virtual try-on generation.
+        """
         if request.reference_image is None:
             raise ValidationError("reference_image is required for edit_image")
 
@@ -171,20 +205,46 @@ class GoogleProvider(Provider):
         try:
             from google.genai import types
 
-            # TODO: Implement actual Gemini image editing API call
-            response = client.models.generate_images(
+            aspect_ratio = self._get_aspect_ratio(request.width, request.height)
+
+            # Build content list: prompt + images
+            contents: list = [request.prompt]
+
+            # Add reference image (avatar)
+            ref_mime_type = self._detect_mime_type(request.reference_image)
+            ref_image = types.Part(
+                inline_data=types.Blob(
+                    mime_type=ref_mime_type,
+                    data=request.reference_image,
+                )
+            )
+            contents.append(ref_image)
+
+            # Add clothing image if provided (for try-on)
+            if request.clothing_image is not None:
+                clothing_mime_type = self._detect_mime_type(request.clothing_image)
+                clothing_image = types.Part(
+                    inline_data=types.Blob(
+                        mime_type=clothing_mime_type,
+                        data=request.clothing_image,
+                    )
+                )
+                contents.append(clothing_image)
+
+            response = client.models.generate_content(
                 model=self._image_model,
-                prompt=request.prompt,
-                config=types.GenerateImagesConfig(
-                    number_of_images=1,
-                    edit_config=types.EditImageConfig(
-                        edit_mode="EDIT_MODE_INPAINT_INSERTION",
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    temperature=0,
+                    response_modalities=["IMAGE"],
+                    image_config=types.ImageConfig(
+                        aspect_ratio=aspect_ratio,
+                        image_size="1K",
                     ),
                 ),
-                image=types.Image(image_bytes=request.reference_image),
             )
 
-            image_data = response.generated_images[0].image.image_bytes
+            image_data = self._extract_image_from_response(response)
             latency = (time.perf_counter() - start) * 1000
 
             return ImageGenerationResponse(
@@ -200,6 +260,19 @@ class GoogleProvider(Provider):
             self._handle_api_error(e)
             raise
 
+    def _detect_mime_type(self, image_bytes: bytes) -> str:
+        """Detect MIME type from image bytes."""
+        if image_bytes[:8] == b"\x89PNG\r\n\x1a\n":
+            return "image/png"
+        elif image_bytes[:2] == b"\xff\xd8":
+            return "image/jpeg"
+        elif image_bytes[:4] == b"RIFF" and image_bytes[8:12] == b"WEBP":
+            return "image/webp"
+        elif image_bytes[:6] in (b"GIF87a", b"GIF89a"):
+            return "image/gif"
+        else:
+            return "image/png"  # Default
+
     def generate_video(
         self, request: VideoGenerationRequest
     ) -> VideoGenerationResponse:
@@ -210,28 +283,39 @@ class GoogleProvider(Provider):
         try:
             from google.genai import types
 
-            # TODO: Implement actual Veo video generation API call
-            response = client.models.generate_videos(
+            # Detect mime type and create image input
+            mime_type = self._detect_mime_type(request.image)
+            input_image = types.Part(
+                inline_data=types.Blob(
+                    mime_type=mime_type,
+                    data=request.image,
+                )
+            )
+
+            aspect_ratio = self._get_aspect_ratio(request.width, request.height)
+
+            # Generate video using Veo
+            operation = client.models.generate_videos(
                 model=self._video_model,
                 prompt=request.prompt,
-                image=types.Image(image_bytes=request.image),
+                image=input_image,
                 config=types.GenerateVideosConfig(
-                    aspect_ratio=f"{request.width}:{request.height}",
+                    aspect_ratio=aspect_ratio,
                     duration_seconds=int(request.duration_seconds),
                 ),
             )
 
             # Poll for completion (video generation is async)
-            while not response.done:
+            while not operation.done:
                 time.sleep(5)
-                response = client.operations.get(response)
+                operation = client.operations.get(operation)
 
-            video_data = response.generated_videos[0].video.video_bytes
+            video_data = operation.result.generated_videos[0].video.video_bytes
             latency = (time.perf_counter() - start) * 1000
 
-            # Extract frames (implementation depends on actual API response)
-            first_frame = request.image  # Use input image as first frame
-            last_frame = first_frame  # TODO: Extract actual last frame
+            # Use input image as first frame, last frame from video if available
+            first_frame = request.image
+            last_frame = request.image  # TODO: Extract actual last frame from video
 
             return VideoGenerationResponse(
                 video=video_data,

@@ -4,7 +4,7 @@
     "description": "Virtual try-on: swap clothing on avatar while preserving identity",
     "presets": {
         "studio_v1": {
-            "base_prompt": "Fashion photography of {subject} wearing {clothing_description}, full body shot, professional studio setting",
+            "base_prompt": "Replace onsie with the reference clothing items.",
             "style": {
                 "lighting": "consistent with original avatar lighting, soft studio illumination",
                 "background": "maintain original background style",

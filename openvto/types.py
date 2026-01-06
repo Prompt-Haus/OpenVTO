@@ -27,8 +27,8 @@ class ImageModel(str, Enum):
 class VideoModel(str, Enum):
     """Supported video generation models."""
 
-    VEO_31 = "veo-3.1"
-    VEO_31_FAST = "veo-3.1-fast"
+    VEO_31 = "veo-3.1-generate-preview"
+    VEO_31_FAST = "veo-3.1-fast-generate-preview"
 
 
 class VideoLoopMode(str, Enum):
@@ -174,11 +174,13 @@ class TryOnResult:
         try_on: The generated try-on variant.
         avatar_hash: Hash of the input avatar for caching.
         clothing_hash: Hash of the clothing composite for caching.
+        clothing_composite: The composed clothing image (for debugging).
     """
 
     try_on: TryOnVariant
     avatar_hash: str | None = None
     clothing_hash: str | None = None
+    clothing_composite: bytes | None = None
 
     @property
     def image(self) -> bytes:

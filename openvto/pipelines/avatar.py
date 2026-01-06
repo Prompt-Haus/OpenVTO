@@ -19,6 +19,7 @@ def generate_avatar(
     provider: Provider,
     storage: Storage | None = None,
     background: str | Background = Background.STUDIO,
+    keep_clothes: bool = False,
     prompt_preset: str = "studio_v1",
     prompt_override: str | None = None,
     seed: int | None = None,
@@ -40,6 +41,8 @@ def generate_avatar(
         provider: Provider instance for image generation.
         storage: Optional storage for caching.
         background: Background style to use.
+        keep_clothes: If True, preserve original clothing. If False (default),
+            replace with neutral gray bodysuit for clean try-on base.
         prompt_preset: Prompt preset name.
         prompt_override: Optional full prompt override.
         seed: Random seed for reproducibility.
@@ -81,12 +84,12 @@ def generate_avatar(
     prompt_config = load_prompt("avatar", prompt_preset)
     prompt_version = f"{prompt_config.name}:{prompt_config.version}:{prompt_preset}"
 
-    # Generate cache key
+    # Generate cache key (include keep_clothes in key)
     cache_key = generate_avatar_cache_key(
         selfie_normalized,
         posture_normalized,
         background.value,
-        prompt_version,
+        f"{prompt_version}:keep_clothes={keep_clothes}",
     )
 
     # Check cache
@@ -135,8 +138,24 @@ def generate_avatar(
     if prompt_override:
         prompt = prompt_override
     else:
-        # For avatar, we describe the subject based on the goal
-        prompt = prompt_config.render(subject="the person from the reference images")
+        # Build clothing instruction based on keep_clothes setting
+        if keep_clothes:
+            clothing_instruction = (
+                "Keep the person wearing exactly the same clothing as in the reference image. "
+                "Preserve all clothing details, colors, and styling exactly as shown."
+            )
+        else:
+            clothing_instruction = (
+                "Replace the person's clothing with a form-fitting neutral gray bodysuit/onesie. "
+                "The bodysuit should be plain, simple, and body-tight to serve as a clean base "
+                "for virtual try-on. Remove all original clothing and accessories."
+            )
+
+        # Render base prompt and append clothing instruction
+        base_prompt = prompt_config.render(
+            subject="the person from the reference image"
+        )
+        prompt = f"{base_prompt}. {clothing_instruction}"
 
     # Create generation request
     request = ImageGenerationRequest(
@@ -177,6 +196,7 @@ def generate_avatar(
                 "seed": meta.seed,
                 "prompt": prompt,
                 "background": background.value,
+                "keep_clothes": keep_clothes,
             },
         )
 

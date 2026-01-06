@@ -20,6 +20,7 @@ class ImageGenerationRequest:
         height: Output image height in pixels.
         seed: Random seed for reproducibility.
         reference_image: Optional reference image bytes for image-to-image.
+        clothing_image: Optional clothing image bytes for try-on.
         mask_image: Optional mask image bytes for inpainting.
     """
 
@@ -28,6 +29,7 @@ class ImageGenerationRequest:
     height: int = 1792  # 9:16 aspect ratio
     seed: int | None = None
     reference_image: bytes | None = None
+    clothing_image: bytes | None = None
     mask_image: bytes | None = None
 
 
