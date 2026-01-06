@@ -47,7 +47,7 @@ Repository = "https://github.com/Prompt-Haus/OpenVTO"
 Issues = "https://github.com/Prompt-Haus/OpenVTO/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/openvto"]
+packages = ["openvto"]
 
 [tool.ruff]
 line-length = 100
