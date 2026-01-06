@@ -131,4 +131,3 @@ class TestPromptLoaderMethods:
         config2 = loader.load("avatar", "white_v1")
         # Should use same cached raw config
         assert config1.full_config is config2.full_config
-

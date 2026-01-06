@@ -151,9 +151,7 @@ class PromptLoader:
         Returns:
             List of prompt names (without .json extension).
         """
-        return [
-            p.stem for p in self.prompts_dir.glob("*.json") if p.stem != "__init__"
-        ]
+        return [p.stem for p in self.prompts_dir.glob("*.json") if p.stem != "__init__"]
 
     def list_presets(self, name: str) -> list[str]:
         """List available presets for a prompt.
@@ -203,4 +201,3 @@ def load_prompt(name: str, preset: str = "studio_v1") -> PromptConfig:
         PromptConfig with the loaded configuration.
     """
     return get_loader().load(name, preset)
-
