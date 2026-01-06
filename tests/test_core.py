@@ -11,11 +11,11 @@ def test_version():
 
 def test_client_initialization_with_mock():
     """Test that OpenVTO client initializes with mock provider."""
-    vto = OpenVTO(provider="mock")
+    vto = OpenVTO(provider="mock", cache_enabled=False)
     assert vto.provider_name == "mock"
     assert vto.image_model == ImageModel.NANO_BANANA.value
     assert vto.video_model == VideoModel.VEO_31.value
-    assert vto.cache_enabled is True
+    assert vto.cache_enabled is False
     assert vto.prompt_preset == "studio_v1"
     assert vto.provider.name == "mock"
 
