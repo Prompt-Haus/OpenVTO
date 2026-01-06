@@ -21,10 +21,16 @@ from openvto import OpenVTO
 def main():
     parser = argparse.ArgumentParser(description="Generate video loop")
     parser.add_argument("--image", type=str, required=True, help="Path to static image")
-    parser.add_argument("--output", type=str, default="videoloop_output.mp4", help="Output path")
+    parser.add_argument(
+        "--output", type=str, default="videoloop_output.mp4", help="Output path"
+    )
     parser.add_argument("--mode", type=str, default="360", choices=["360", "idle"])
-    parser.add_argument("--seconds", type=float, default=4.0, help="Duration (4-8 seconds)")
-    parser.add_argument("--mock", action="store_true", help="Use mock provider for testing")
+    parser.add_argument(
+        "--seconds", type=float, default=4.0, help="Duration (4-8 seconds)"
+    )
+    parser.add_argument(
+        "--mock", action="store_true", help="Use mock provider for testing"
+    )
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     args = parser.parse_args()
 
@@ -79,4 +85,3 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
-

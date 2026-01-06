@@ -24,11 +24,19 @@ from openvto import OpenVTO, ClothingItem
 def main():
     parser = argparse.ArgumentParser(description="Run full virtual try-on pipeline")
     parser.add_argument("--selfie", type=str, required=True, help="Path to selfie")
-    parser.add_argument("--posture", type=str, required=True, help="Path to full-body image")
-    parser.add_argument("--clothes", type=str, nargs="+", required=True, help="Clothing images")
-    parser.add_argument("--output-dir", type=str, default="./output", help="Output directory")
+    parser.add_argument(
+        "--posture", type=str, required=True, help="Path to full-body image"
+    )
+    parser.add_argument(
+        "--clothes", type=str, nargs="+", required=True, help="Clothing images"
+    )
+    parser.add_argument(
+        "--output-dir", type=str, default="./output", help="Output directory"
+    )
     parser.add_argument("--no-video", action="store_true", help="Skip video generation")
-    parser.add_argument("--mock", action="store_true", help="Use mock provider for testing")
+    parser.add_argument(
+        "--mock", action="store_true", help="Use mock provider for testing"
+    )
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     args = parser.parse_args()
 
@@ -105,7 +113,9 @@ def main():
     print("\n" + "=" * 50)
     print("Pipeline Complete!")
     print("=" * 50)
-    print(f"Total time: {result.total_latency_ms:.0f}ms ({result.total_latency_ms/1000:.1f}s)")
+    print(
+        f"Total time: {result.total_latency_ms:.0f}ms ({result.total_latency_ms/1000:.1f}s)"
+    )
     print(f"\nStep breakdown:")
     print(f"  Avatar: {result.avatar.meta.latency_ms:.0f}ms")
     print(f"  Try-on: {result.tryon.meta.latency_ms:.0f}ms")
@@ -118,4 +128,3 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
-

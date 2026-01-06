@@ -28,7 +28,9 @@ def parse_outfit(outfit_str: str) -> list[Path]:
 
 def main():
     parser = argparse.ArgumentParser(description="Process multiple outfits")
-    parser.add_argument("--avatar", type=str, required=True, help="Path to avatar image")
+    parser.add_argument(
+        "--avatar", type=str, required=True, help="Path to avatar image"
+    )
     parser.add_argument(
         "--outfits",
         type=str,
@@ -36,7 +38,9 @@ def main():
         required=True,
         help="Outfit specs (comma-separated items per outfit)",
     )
-    parser.add_argument("--output-dir", type=str, default="./batch_output", help="Output dir")
+    parser.add_argument(
+        "--output-dir", type=str, default="./batch_output", help="Output dir"
+    )
     parser.add_argument("--mock", action="store_true", help="Use mock provider")
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     args = parser.parse_args()
@@ -56,7 +60,9 @@ def main():
             if not p.exists():
                 print(f"Error: Clothing not found: {p}")
                 return 1
-            items.append(ClothingItem(id=f"outfit{i}_item{j}", image=str(p), name=p.stem))
+            items.append(
+                ClothingItem(id=f"outfit{i}_item{j}", image=str(p), name=p.stem)
+            )
         outfits.append(Outfit(items=items, name=f"Outfit {i}"))
 
     # Create output directory
@@ -117,4 +123,3 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
-

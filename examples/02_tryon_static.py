@@ -20,12 +20,22 @@ from openvto import OpenVTO, ClothingItem, Outfit
 
 def main():
     parser = argparse.ArgumentParser(description="Generate static try-on")
-    parser.add_argument("--avatar", type=str, required=True, help="Path to avatar/base image")
-    parser.add_argument("--clothes", type=str, nargs="+", required=True, help="Clothing image(s)")
-    parser.add_argument("--output", type=str, default="tryon_output.png", help="Output path")
-    parser.add_argument("--mock", action="store_true", help="Use mock provider for testing")
+    parser.add_argument(
+        "--avatar", type=str, required=True, help="Path to avatar/base image"
+    )
+    parser.add_argument(
+        "--clothes", type=str, nargs="+", required=True, help="Clothing image(s)"
+    )
+    parser.add_argument(
+        "--output", type=str, default="tryon_output.png", help="Output path"
+    )
+    parser.add_argument(
+        "--mock", action="store_true", help="Use mock provider for testing"
+    )
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
-    parser.add_argument("--no-compose", action="store_true", help="Don't composite clothing")
+    parser.add_argument(
+        "--no-compose", action="store_true", help="Don't composite clothing"
+    )
     args = parser.parse_args()
 
     # Validate inputs
@@ -82,4 +92,3 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
-
