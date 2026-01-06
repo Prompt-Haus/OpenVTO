@@ -181,7 +181,9 @@ class LocalStorage(Storage):
             pass
         return removed
 
-    def prune(self, max_size_bytes: int | None = None, max_entries: int | None = None) -> int:
+    def prune(
+        self, max_size_bytes: int | None = None, max_entries: int | None = None
+    ) -> int:
         """Prune cache to stay within limits.
 
         Removes oldest entries first.
@@ -227,4 +229,3 @@ class LocalStorage(Storage):
                 break
 
         return removed
-

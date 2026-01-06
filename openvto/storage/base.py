@@ -215,4 +215,3 @@ class NullStorage(Storage):
 
     def list_keys(self, prefix: str = "") -> list[str]:
         return []
-
