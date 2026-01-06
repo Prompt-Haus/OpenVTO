@@ -1,0 +1,58 @@
+{
+    "name": "tryon",
+    "version": "1.0.0",
+    "description": "Virtual try-on: swap clothing on avatar while preserving identity",
+    "presets": {
+        "studio_v1": {
+            "base_prompt": "Fashion photography of {subject} wearing {clothing_description}, full body shot, professional studio setting",
+            "style": {
+                "lighting": "consistent with original avatar lighting, soft studio illumination",
+                "background": "maintain original background style",
+                "garment_rendering": "realistic fabric texture, natural draping, accurate fit to body",
+                "quality": "high-end fashion editorial, seamless clothing integration"
+            },
+            "identity_preservation": {
+                "instructions": "Keep exact same face, hair, skin tone, body shape, and pose as the avatar",
+                "negative": "do not modify face, do not change body proportions, do not alter pose"
+            },
+            "garment_instructions": {
+                "fit": "clothing fits naturally on the body, proper sizing",
+                "physics": "realistic fabric behavior, natural folds and creases",
+                "integration": "seamless blend between garment and body, no floating edges"
+            }
+        },
+        "catalog_v1": {
+            "base_prompt": "{subject} modeling {clothing_description}, e-commerce product photography style",
+            "style": {
+                "lighting": "bright, even lighting to showcase garment details",
+                "background": "clean background matching original",
+                "garment_rendering": "clear visibility of garment features, accurate colors",
+                "quality": "product photography standard, sharp details"
+            },
+            "identity_preservation": {
+                "instructions": "Preserve model appearance exactly",
+                "negative": "no changes to model"
+            },
+            "garment_instructions": {
+                "fit": "showcase how garment fits on body",
+                "physics": "natural fabric appearance",
+                "integration": "clean garment edges, proper layering"
+            }
+        }
+    },
+    "variables": {
+        "subject": {
+            "description": "Reference to the avatar/person",
+            "required": true
+        },
+        "clothing_description": {
+            "description": "Description of clothing items to apply",
+            "required": true
+        },
+        "styling_notes": {
+            "description": "Additional styling instructions",
+            "required": false
+        }
+    },
+    "negative_prompt": "wrong clothing, misaligned garment, floating clothes, unrealistic fit, distorted body, changed face, different person, blurry, low quality, deformed limbs, bad anatomy"
+}

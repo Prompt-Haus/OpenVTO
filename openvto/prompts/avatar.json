@@ -1,0 +1,54 @@
+{
+    "name": "avatar",
+    "version": "1.0.0",
+    "description": "Generate studio-quality avatar from selfie and posture reference",
+    "presets": {
+        "studio_v1": {
+            "base_prompt": "Professional fashion photography portrait of {subject}, full body shot, standing in a relaxed natural pose",
+            "style": {
+                "lighting": "soft diffused studio lighting with subtle rim light",
+                "background": "clean minimal studio background, soft gradient",
+                "camera": "medium format camera, 85mm lens, f/2.8, sharp focus on subject",
+                "quality": "high-end fashion editorial, magazine quality, 8K resolution"
+            },
+            "identity_preservation": {
+                "instructions": "Preserve exact facial features, skin tone, hair color and style, body proportions",
+                "negative": "do not change face shape, do not alter body type, no artificial smoothing"
+            },
+            "composition": {
+                "framing": "full body visible, head to toe, centered in frame",
+                "aspect_ratio": "9:16 portrait orientation",
+                "headroom": "small amount of space above head"
+            }
+        },
+        "white_v1": {
+            "base_prompt": "Clean fashion photography portrait of {subject}, full body, neutral standing pose",
+            "style": {
+                "lighting": "bright even lighting, minimal shadows",
+                "background": "pure white seamless background",
+                "camera": "fashion photography style, crisp and clean",
+                "quality": "e-commerce product photography quality"
+            },
+            "identity_preservation": {
+                "instructions": "Maintain exact likeness, natural skin texture, accurate body shape",
+                "negative": "no face modifications, no body alterations"
+            },
+            "composition": {
+                "framing": "full body centered, adequate margins",
+                "aspect_ratio": "9:16 portrait orientation",
+                "headroom": "comfortable spacing"
+            }
+        }
+    },
+    "variables": {
+        "subject": {
+            "description": "Description of the person (derived from input images)",
+            "required": true
+        },
+        "background_override": {
+            "description": "Custom background description",
+            "required": false
+        }
+    },
+    "negative_prompt": "deformed, distorted, disfigured, bad anatomy, wrong proportions, extra limbs, missing limbs, floating limbs, disconnected limbs, mutation, ugly, disgusting, blurry, out of focus, low quality, watermark, text, logo, signature"
+}

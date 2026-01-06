@@ -1,0 +1,76 @@
+{
+    "name": "videoloop",
+    "version": "1.0.0",
+    "description": "Generate animated video loop from static try-on image",
+    "presets": {
+        "360_v1": {
+            "base_prompt": "Smooth slow rotation animation of {subject}, subtle 360 degree turn, fashion video showcase",
+            "motion": {
+                "type": "rotation",
+                "speed": "slow and graceful, approximately 45 degrees over duration",
+                "smoothness": "fluid continuous motion, no jerky movements",
+                "loop_friendly": "end pose similar to start for seamless looping"
+            },
+            "style": {
+                "lighting": "consistent lighting throughout rotation",
+                "background": "stable background, no shifts",
+                "quality": "high quality video, smooth frame interpolation"
+            },
+            "preservation": {
+                "identity": "maintain exact appearance throughout",
+                "clothing": "garments move naturally with body rotation",
+                "expression": "neutral pleasant expression, minimal facial movement"
+            }
+        },
+        "idle_v1": {
+            "base_prompt": "Subtle idle animation of {subject}, gentle breathing motion, natural micro-movements",
+            "motion": {
+                "type": "idle",
+                "speed": "very subtle, barely perceptible movement",
+                "smoothness": "natural breathing rhythm, organic feel",
+                "loop_friendly": "seamless loop, no visible cut point"
+            },
+            "style": {
+                "lighting": "stable consistent lighting",
+                "background": "static background",
+                "quality": "smooth natural animation"
+            },
+            "preservation": {
+                "identity": "no changes to appearance",
+                "clothing": "subtle fabric movement from breathing",
+                "expression": "relaxed natural expression"
+            }
+        },
+        "showcase_v1": {
+            "base_prompt": "Fashion showcase video of {subject}, dynamic but controlled movement highlighting the outfit",
+            "motion": {
+                "type": "showcase",
+                "speed": "moderate pace, elegant movement",
+                "smoothness": "professional model movement quality",
+                "loop_friendly": "designed for seamless repeat"
+            },
+            "style": {
+                "lighting": "dynamic lighting that flatters the garment",
+                "background": "stable studio background",
+                "quality": "high-end fashion video quality"
+            },
+            "preservation": {
+                "identity": "consistent appearance",
+                "clothing": "movement shows off garment features",
+                "expression": "confident model expression"
+            }
+        }
+    },
+    "variables": {
+        "subject": {
+            "description": "Reference to the try-on image/person",
+            "required": true
+        },
+        "duration_seconds": {
+            "description": "Video duration (4-8 seconds)",
+            "required": false,
+            "default": 4
+        }
+    },
+    "negative_prompt": "jerky motion, sudden movements, morphing, distortion, flickering, unstable video, face changes, body deformation, floating objects, glitches, artifacts, low frame rate"
+}
