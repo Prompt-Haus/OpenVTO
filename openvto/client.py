@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from openvto.errors import ConfigurationError
+from openvto.providers.base import Provider
+from openvto.providers.google import GoogleProvider
+from openvto.providers.mock import MockProvider
+from openvto.types import ImageModel, VideoModel
+
 if TYPE_CHECKING:
     from openvto.types import (
         AvatarResult,
-        BatchTryOnResult,
         ImageInput,
         Outfit,
         PipelineResult,
@@ -32,8 +37,8 @@ class OpenVTO:
         *,
         provider: str = "google",
         api_key: str | None = None,
-        image_model: str = "imagen",
-        video_model: str = "veo",
+        image_model: str = ImageModel.NANO_BANANA.value,
+        video_model: str = VideoModel.VEO_31.value,
         cache_enabled: bool = True,
         cache_dir: str | None = None,
         prompt_preset: str = "studio_v1",
@@ -43,8 +48,8 @@ class OpenVTO:
         Args:
             provider: Provider to use for generation ("google" or "mock").
             api_key: API key for the provider. If None, reads from environment.
-            image_model: Image generation model ("imagen" or "imagen-pro").
-            video_model: Video generation model ("veo" or "veo-fast").
+            image_model: Image generation model (default: gemini-2.5-flash-image).
+            video_model: Video generation model (default: veo-3.1).
             cache_enabled: Whether to enable caching of generated assets.
             cache_dir: Directory for cache storage. Defaults to ~/.openvto/cache.
             prompt_preset: Prompt template preset to use.
@@ -57,7 +62,29 @@ class OpenVTO:
         self.cache_dir = cache_dir
         self.prompt_preset = prompt_preset
 
-        # TODO: Initialize provider, storage, and prompt loader in Phase 2+
+        # Initialize provider
+        self._provider = self._create_provider()
+
+    def _create_provider(self) -> Provider:
+        """Create the appropriate provider instance."""
+        if self.provider_name == "google":
+            return GoogleProvider(
+                api_key=self.api_key,
+                image_model=self.image_model,
+                video_model=self.video_model,
+            )
+        elif self.provider_name == "mock":
+            return MockProvider()
+        else:
+            raise ConfigurationError(
+                f"Unknown provider: {self.provider_name}. "
+                "Supported providers: 'google', 'mock'"
+            )
+
+    @property
+    def provider(self) -> Provider:
+        """Get the current provider instance."""
+        return self._provider
 
     def generate_avatar(
         self,
@@ -87,7 +114,6 @@ class OpenVTO:
         avatar: AvatarResult | ImageInput,
         clothes: list[ImageInput] | Outfit,
         *,
-        variants: int = 1,
         prompt: str | None = None,
         compose: bool = True,
     ) -> TryOnResult:
@@ -96,12 +122,11 @@ class OpenVTO:
         Args:
             avatar: Avatar result or image to use as base.
             clothes: List of clothing images or an Outfit object.
-            variants: Number of variants to generate (1-4).
             prompt: Optional custom prompt override.
             compose: Whether to composite clothing images first.
 
         Returns:
-            TryOnResult with generated try-on variants and metadata.
+            TryOnResult with generated try-on and metadata.
         """
         raise NotImplementedError("Try-on generation will be implemented in Phase 6")
 
@@ -136,7 +161,6 @@ class OpenVTO:
         posture: ImageInput,
         clothes: list[ImageInput] | Outfit,
         *,
-        variants: int = 1,
         make_video: bool = True,
     ) -> PipelineResult:
         """Run the full pipeline: avatar → try-on → video.
@@ -145,29 +169,9 @@ class OpenVTO:
             selfie: Selfie/face image for identity.
             posture: Full-body posture reference image.
             clothes: Clothing images or Outfit for try-on.
-            variants: Number of try-on variants to generate.
             make_video: Whether to generate video loop.
 
         Returns:
             PipelineResult with all generated assets.
         """
         raise NotImplementedError("Full pipeline will be implemented in Phase 6")
-
-    def batch_tryon(
-        self,
-        avatar: AvatarResult | ImageInput,
-        outfits: list[Outfit],
-        *,
-        variants: int = 1,
-    ) -> BatchTryOnResult:
-        """Generate try-ons for multiple outfits in batch.
-
-        Args:
-            avatar: Avatar result or image to use as base.
-            outfits: List of outfits to try on.
-            variants: Number of variants per outfit.
-
-        Returns:
-            BatchTryOnResult with results for each outfit.
-        """
-        raise NotImplementedError("Batch try-on will be implemented in Phase 6")

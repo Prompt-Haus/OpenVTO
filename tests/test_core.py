@@ -1,7 +1,7 @@
 """Tests for OpenVTO core functionality."""
 
 from openvto import OpenVTO, __version__
-from openvto.types import ClothingItem, GenerationMeta, Outfit
+from openvto.types import ClothingItem, GenerationMeta, ImageModel, Outfit, VideoModel
 
 
 def test_version():
@@ -9,28 +9,29 @@ def test_version():
     assert __version__ == "0.0.1"
 
 
-def test_client_initialization():
-    """Test that OpenVTO client initializes with defaults."""
-    vto = OpenVTO()
-    assert vto.provider_name == "google"
-    assert vto.image_model == "imagen"
-    assert vto.video_model == "veo"
+def test_client_initialization_with_mock():
+    """Test that OpenVTO client initializes with mock provider."""
+    vto = OpenVTO(provider="mock")
+    assert vto.provider_name == "mock"
+    assert vto.image_model == ImageModel.NANO_BANANA.value
+    assert vto.video_model == VideoModel.VEO_31.value
     assert vto.cache_enabled is True
     assert vto.prompt_preset == "studio_v1"
+    assert vto.provider.name == "mock"
 
 
 def test_client_custom_config():
     """Test that OpenVTO client accepts custom configuration."""
     vto = OpenVTO(
         provider="mock",
-        image_model="imagen-pro",
-        video_model="veo-fast",
+        image_model=ImageModel.NANO_BANANA_PRO.value,
+        video_model=VideoModel.VEO_31_FAST.value,
         cache_enabled=False,
         prompt_preset="custom_v1",
     )
     assert vto.provider_name == "mock"
-    assert vto.image_model == "imagen-pro"
-    assert vto.video_model == "veo-fast"
+    assert vto.image_model == ImageModel.NANO_BANANA_PRO.value
+    assert vto.video_model == VideoModel.VEO_31_FAST.value
     assert vto.cache_enabled is False
     assert vto.prompt_preset == "custom_v1"
 
@@ -40,14 +41,16 @@ def test_clothing_item_creation():
     item = ClothingItem(
         id="shirt-001",
         image="path/to/shirt.jpg",
-        description="White cotton shirt",
+        name="White Cotton Shirt",
+        description="Classic fit cotton shirt",
+        styling="oversized",
         category="top",
-        tags=["casual", "summer"],
     )
     assert item.id == "shirt-001"
-    assert item.description == "White cotton shirt"
+    assert item.name == "White Cotton Shirt"
+    assert item.description == "Classic fit cotton shirt"
+    assert item.styling == "oversized"
     assert item.category == "top"
-    assert "casual" in item.tags
 
 
 def test_outfit_creation():
@@ -71,13 +74,13 @@ def test_outfit_requires_items():
 def test_generation_meta():
     """Test GenerationMeta dataclass."""
     meta = GenerationMeta(
-        model="imagen",
+        model="gemini-2.5-flash-image",
         provider="google",
         seed=42,
         latency_ms=1500.0,
         cache_hit=False,
     )
-    assert meta.model == "imagen"
+    assert meta.model == "gemini-2.5-flash-image"
     assert meta.provider == "google"
     assert meta.seed == 42
     assert meta.latency_ms == 1500.0

@@ -6,13 +6,18 @@ from openvto.client import OpenVTO
 from openvto.types import (
     Avatar,
     AvatarResult,
+    Background,
     ClothingItem,
     GenerationMeta,
     ImageInput,
+    ImageModel,
     Outfit,
     PipelineResult,
     TryOnResult,
+    TryOnVariant,
+    VideoLoopMode,
     VideoLoopResult,
+    VideoModel,
 )
 
 __all__ = [
@@ -21,11 +26,16 @@ __all__ = [
     # Types
     "Avatar",
     "AvatarResult",
+    "Background",
     "ClothingItem",
     "GenerationMeta",
     "ImageInput",
+    "ImageModel",
     "Outfit",
     "PipelineResult",
     "TryOnResult",
+    "TryOnVariant",
+    "VideoLoopMode",
     "VideoLoopResult",
+    "VideoModel",
 ]
