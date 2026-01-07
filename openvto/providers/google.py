@@ -281,26 +281,27 @@ class GoogleProvider(Provider):
         start = time.perf_counter()
 
         try:
+            import io
             from google.genai import types
 
-            # Detect mime type and create image input
-            mime_type = self._detect_mime_type(request.image)
-            input_image = types.Part(
-                inline_data=types.Blob(
-                    mime_type=mime_type,
-                    data=request.image,
-                )
-            )
+            # Ensure image is bytes and detect mime type
+            image_bytes = request.image
+            mime_type = self._detect_mime_type(image_bytes)
 
-            aspect_ratio = self._get_aspect_ratio(request.width, request.height)
+            # Create the specific wrapper expected by the Google SDK for video generation
+            formatted_image = types.Image(
+                image_bytes=image_bytes,
+                mime_type=mime_type,
+            )
 
             # Generate video using Veo
             operation = client.models.generate_videos(
                 model=self._video_model,
                 prompt=request.prompt,
-                image=input_image,
+                image=formatted_image,
                 config=types.GenerateVideosConfig(
-                    aspect_ratio=aspect_ratio,
+                    aspect_ratio="9:16",
+                    resolution="720p",
                     duration_seconds=int(request.duration_seconds),
                 ),
             )
@@ -310,7 +311,7 @@ class GoogleProvider(Provider):
                 time.sleep(5)
                 operation = client.operations.get(operation)
 
-            video_data = operation.result.generated_videos[0].video.video_bytes
+            video_data = operation.result.generated_videos[0]
             latency = (time.perf_counter() - start) * 1000
 
             # Use input image as first frame, last frame from video if available
