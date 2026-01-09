@@ -9,8 +9,6 @@ from openvto.pipelines import generate_avatar, generate_tryon, generate_videoloo
 from openvto.providers.base import Provider
 from openvto.providers.google import GoogleProvider
 from openvto.providers.mock import MockProvider
-from openvto.storage.base import NullStorage, Storage
-from openvto.storage.local import LocalStorage
 from openvto.types import ImageModel, PipelineResult, VideoModel
 from openvto.utils.timing import Timer
 
@@ -42,8 +40,6 @@ class OpenVTO:
         api_key: str | None = None,
         image_model: str = ImageModel.NANO_BANANA_PRO.value,
         video_model: str = VideoModel.VEO_31_FAST.value,
-        cache_enabled: bool = True,
-        cache_dir: str | None = None,
         prompt_preset: str = "studio_v1",
     ) -> None:
         """Initialize the OpenVTO client.
@@ -53,23 +49,16 @@ class OpenVTO:
             api_key: API key for the provider. If None, reads from environment.
             image_model: Image generation model (default: gemini-2.5-flash-image).
             video_model: Video generation model (default: veo-3.1).
-            cache_enabled: Whether to enable caching of generated assets.
-            cache_dir: Directory for cache storage. Defaults to ~/.openvto/cache.
             prompt_preset: Prompt template preset to use.
         """
         self.provider_name = provider
         self.api_key = api_key
         self.image_model = image_model
         self.video_model = video_model
-        self.cache_enabled = cache_enabled
-        self.cache_dir = cache_dir
         self.prompt_preset = prompt_preset
 
         # Initialize provider
         self._provider = self._create_provider()
-
-        # Initialize storage
-        self._storage = self._create_storage()
 
     def _create_provider(self) -> Provider:
         """Create the appropriate provider instance."""
@@ -87,21 +76,10 @@ class OpenVTO:
                 "Supported providers: 'google', 'mock'"
             )
 
-    def _create_storage(self) -> Storage:
-        """Create the storage backend."""
-        if not self.cache_enabled:
-            return NullStorage()
-        return LocalStorage(cache_dir=self.cache_dir)
-
     @property
     def provider(self) -> Provider:
         """Get the current provider instance."""
         return self._provider
-
-    @property
-    def storage(self) -> Storage:
-        """Get the current storage instance."""
-        return self._storage
 
     def generate_avatar(
         self,
@@ -131,7 +109,6 @@ class OpenVTO:
             selfie=selfie,
             posture=posture,
             provider=self._provider,
-            storage=self._storage if self.cache_enabled else None,
             background=background,
             keep_clothes=keep_clothes,
             prompt_preset=self.prompt_preset,
@@ -164,7 +141,6 @@ class OpenVTO:
             avatar=avatar,
             clothes=clothes,
             provider=self._provider,
-            storage=self._storage if self.cache_enabled else None,
             prompt_preset=self.prompt_preset,
             prompt_override=prompt,
             compose=compose,
@@ -195,7 +171,6 @@ class OpenVTO:
         return generate_videoloop(
             static_image=static_image,
             provider=self._provider,
-            storage=self._storage if self.cache_enabled else None,
             mode=mode,
             seconds=seconds,
             prompt_override=prompt,

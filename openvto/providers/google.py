@@ -344,6 +344,9 @@ class GoogleProvider(Provider):
                     resolution="720p",
                     duration_seconds=int(request.duration_seconds),
                     generate_audio=False,
+                    # last_frame=request.last_frame, # TODO: Add last frame support
+                    # negative_prompt=request.negative_prompt, # TODO: Add negative prompt support
+                    # seed=request.seed, # TODO: Add seed support
                 ),
             )
 

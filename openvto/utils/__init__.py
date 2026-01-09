@@ -1,10 +1,6 @@
 """Utility functions for image processing, hashing, and timing."""
 
 from openvto.utils.hashing import (
-    generate_avatar_cache_key,
-    generate_cache_key,
-    generate_tryon_cache_key,
-    generate_video_cache_key,
     hash_bytes,
     hash_dict,
     hash_file,
@@ -48,10 +44,6 @@ __all__ = [
     "pil_to_bytes",
     "resize_image",
     # Hashing
-    "generate_avatar_cache_key",
-    "generate_cache_key",
-    "generate_tryon_cache_key",
-    "generate_video_cache_key",
     "hash_bytes",
     "hash_dict",
     "hash_file",

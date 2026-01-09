@@ -5,7 +5,6 @@ import pytest
 from openvto import OpenVTO
 from openvto.pipelines import compose_clothing, generate_avatar, generate_tryon, generate_videoloop
 from openvto.providers import MockProvider
-from openvto.storage import MemoryStorage
 from openvto.types import ClothingItem, Outfit
 
 
@@ -47,47 +46,19 @@ class TestGenerateAvatar:
     def test_generate_avatar_basic(self):
         """Test basic avatar generation."""
         provider = MockProvider(latency_ms=1)
-        storage = MemoryStorage()
         test_image = create_test_image()
 
         result = generate_avatar(
             selfie=test_image,
             posture=test_image,
             provider=provider,
-            storage=storage,
         )
 
         assert result.avatar is not None
         assert result.avatar.image is not None
         assert len(result.avatar.image) > 0
         assert result.meta is not None
-        assert result.meta.cache_hit is False
 
-    def test_generate_avatar_cache_hit(self):
-        """Test avatar generation with cache hit."""
-        provider = MockProvider(latency_ms=1)
-        storage = MemoryStorage()
-        test_image = create_test_image()
-
-        # First call - cache miss
-        result1 = generate_avatar(
-            selfie=test_image,
-            posture=test_image,
-            provider=provider,
-            storage=storage,
-            seed=42,
-        )
-        assert result1.meta.cache_hit is False
-
-        # Second call - cache hit
-        result2 = generate_avatar(
-            selfie=test_image,
-            posture=test_image,
-            provider=provider,
-            storage=storage,
-            seed=42,
-        )
-        assert result2.meta.cache_hit is True
 
     def test_generate_avatar_different_backgrounds(self):
         """Test avatar generation with different backgrounds."""
@@ -272,7 +243,7 @@ class TestOpenVTOClient:
 
     def test_client_pipeline(self):
         """Test full pipeline through client."""
-        vto = OpenVTO(provider="mock", cache_enabled=False)
+        vto = OpenVTO(provider="mock")
         test_image = create_test_image()
 
         result = vto.pipeline(
@@ -291,7 +262,7 @@ class TestOpenVTOClient:
 
     def test_client_pipeline_no_video(self):
         """Test pipeline without video generation."""
-        vto = OpenVTO(provider="mock", cache_enabled=False)
+        vto = OpenVTO(provider="mock")
         test_image = create_test_image()
 
         result = vto.pipeline(
@@ -308,7 +279,7 @@ class TestOpenVTOClient:
 
     def test_client_individual_steps(self):
         """Test individual generation steps through client."""
-        vto = OpenVTO(provider="mock", cache_enabled=False)
+        vto = OpenVTO(provider="mock")
         test_image = create_test_image()
 
         avatar = vto.generate_avatar(selfie=test_image, posture=test_image)

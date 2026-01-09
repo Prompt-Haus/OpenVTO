@@ -93,8 +93,6 @@ class GenerationMeta:
         provider: The provider used (e.g., "google", "mock").
         seed: Random seed used for reproducibility.
         latency_ms: Generation time in milliseconds.
-        cache_hit: Whether the result was served from cache.
-        cache_key: The cache key used for this generation.
         prompt: The prompt used for generation.
         prompt_version: Version identifier for the prompt template.
     """
@@ -103,8 +101,6 @@ class GenerationMeta:
     provider: str
     seed: int | None = None
     latency_ms: float | None = None
-    cache_hit: bool = False
-    cache_key: str | None = None
     prompt: str | None = None
     prompt_version: str | None = None
 

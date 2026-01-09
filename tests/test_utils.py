@@ -7,7 +7,6 @@ from openvto.utils import (
     encode_base64,
     decode_base64,
     format_duration,
-    generate_cache_key,
     hash_bytes,
     hash_dict,
     hash_string,
@@ -44,21 +43,6 @@ class TestHashing:
         """Test short hash generation."""
         h = short_hash(b"test", length=8)
         assert len(h) == 8
-
-    def test_generate_cache_key(self):
-        """Test cache key generation."""
-        key1 = generate_cache_key(b"img1", b"img2", {"opt": "value"}, prefix="test")
-        key2 = generate_cache_key(b"img1", b"img2", {"opt": "value"}, prefix="test")
-        key3 = generate_cache_key(b"img1", b"img3", {"opt": "value"}, prefix="test")
-
-        assert key1 == key2  # Same inputs = same key
-        assert key1 != key3  # Different inputs = different key
-        assert key1.startswith("test_")
-
-    def test_cache_key_with_none(self):
-        """Test cache key handles None values."""
-        key = generate_cache_key(b"data", None, "string")
-        assert len(key) == 64
 
 
 class TestImages:

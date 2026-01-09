@@ -43,6 +43,62 @@ print(vto.hello())  # Hello from OpenVTO!
 
 ---
 
+## Example Assets
+
+OpenVTO includes bundled demo assets for quick testing and prototyping. Access them via the `openvto.example` module:
+
+```python
+from openvto import example
+
+# List available clothing categories
+categories = example.list_clothes_categories()
+# ['jackets', 'pants', 'shirts']
+
+# Get all items in a category
+all_jackets = example.clothes("jackets")
+# [{'i': 1, 'front': Path(...), 'back': Path(...)}, ...]
+
+# Get a specific item (both views)
+jacket = example.clothes("jackets", i=2)
+# {'front': Path('.../2_front.jpg'), 'back': Path('.../2_back.jpg')}
+
+# Get a specific view
+front_path = example.clothes("jackets", i=2, view="front")
+# Path('.../2_front.jpg')
+
+# Get an avatar image
+avatar_path = example.avatar(i=1)
+# Path('.../1.png')
+
+# Get a person photo (posture or selfie)
+posture_path = example.person(i=1, kind="posture")
+selfie_path = example.person(i=1, kind="selfie")
+```
+
+### Available Assets
+
+| Category | Items | Views |
+|----------|-------|-------|
+| `jackets` | 1-4 | front, back |
+| `pants` | 1-4 | front, back |
+| `shirts` | 1-4 | front, back |
+| `avatars` | 1 | - |
+| `people` | 1 | posture, selfie |
+
+### Return Types
+
+By default, functions return `pathlib.Path` objects. You can also request:
+
+```python
+# Get raw bytes
+data = example.clothes("jackets", i=1, view="front", return_type="bytes")
+
+# Get PIL Image (requires pillow: pip install openvto[examples])
+img = example.clothes("jackets", i=1, view="front", return_type="pil")
+```
+
+---
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

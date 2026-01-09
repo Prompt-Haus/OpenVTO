@@ -11,11 +11,10 @@ def test_version():
 
 def test_client_initialization_with_mock():
     """Test that OpenVTO client initializes with mock provider."""
-    vto = OpenVTO(provider="mock", cache_enabled=False)
+    vto = OpenVTO(provider="mock")
     assert vto.provider_name == "mock"
     assert vto.image_model == ImageModel.NANO_BANANA_PRO.value
     assert vto.video_model == VideoModel.VEO_31_FAST.value
-    assert vto.cache_enabled is False
     assert vto.prompt_preset == "studio_v1"
     assert vto.provider.name == "mock"
 
@@ -26,13 +25,11 @@ def test_client_custom_config():
         provider="mock",
         image_model=ImageModel.NANO_BANANA_PRO.value,
         video_model=VideoModel.VEO_31_FAST.value,
-        cache_enabled=False,
         prompt_preset="custom_v1",
     )
     assert vto.provider_name == "mock"
     assert vto.image_model == ImageModel.NANO_BANANA_PRO.value
     assert vto.video_model == VideoModel.VEO_31_FAST.value
-    assert vto.cache_enabled is False
     assert vto.prompt_preset == "custom_v1"
 
 
@@ -78,10 +75,8 @@ def test_generation_meta():
         provider="google",
         seed=42,
         latency_ms=1500.0,
-        cache_hit=False,
     )
     assert meta.model == "gemini-2.5-flash-image"
     assert meta.provider == "google"
     assert meta.seed == 42
     assert meta.latency_ms == 1500.0
-    assert meta.cache_hit is False

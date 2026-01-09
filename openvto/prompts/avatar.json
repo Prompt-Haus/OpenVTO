@@ -12,7 +12,7 @@
                 "quality": "high-end fashion editorial, magazine quality, 8K resolution"
             },
             "identity_preservation": {
-                "instructions": "Preserve exact facial features, skin tone, hair color and style, body proportions",
+                "instructions": "Make sure to preserve exact facial features, skin tone, hair color and style, body proportions, use both reference images to preserve the identity",
                 "negative": "do not change face shape, do not alter body type, no artificial smoothing"
             },
             "composition": {

@@ -40,6 +40,9 @@ dev = [
     "pytest-cov>=4.0",
     "ruff>=0.1.0",
 ]
+examples = [
+    "pillow>=9.0",
+]
 
 [project.urls]
 Homepage = "https://openvto.com"
@@ -48,6 +51,17 @@ Issues = "https://github.com/Prompt-Haus/OpenVTO/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["openvto"]
+
+# Include all data files (assets) in the package
+[tool.hatch.build.targets.wheel.force-include]
+"openvto/assets" = "openvto/assets"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "openvto/**/*.py",
+    "openvto/**/*.json",
+    "openvto/assets/**/*",
+]
 
 [tool.ruff]
 line-length = 100

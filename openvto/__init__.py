@@ -20,9 +20,13 @@ from openvto.types import (
     VideoModel,
 )
 
+# Import example submodule for convenient access via openvto.example
+from openvto import example
+
 __all__ = [
     "OpenVTO",
     "__version__",
+    "example",
     # Types
     "Avatar",
     "AvatarResult",

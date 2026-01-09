@@ -71,18 +71,6 @@ class ModelNotFoundError(ProviderError):
     pass
 
 
-class CacheError(OpenVTOError):
-    """Raised when cache operations fail.
-
-    Examples:
-        - Cache read/write errors
-        - Invalid cache key
-        - Storage backend unavailable
-    """
-
-    pass
-
-
 class ImageProcessingError(OpenVTOError):
     """Raised when image processing fails.
 
