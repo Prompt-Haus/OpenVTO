@@ -125,7 +125,9 @@ def list_clothes_categories() -> list[str]:
         return []
 
     return sorted(
-        d.name for d in clothes_path.iterdir() if d.is_dir() and not d.name.startswith(".")
+        d.name
+        for d in clothes_path.iterdir()
+        if d.is_dir() and not d.name.startswith(".")
     )
 
 
@@ -371,4 +373,3 @@ def person(
         )
 
     return _load_asset(person_path, return_type)
-

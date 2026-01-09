@@ -32,13 +32,12 @@ OpenVTO's goal is simple: **make it easy for teams to ship virtual try-ons that 
 pip install openvto
 ```
 
-## Quick Start
+## Client Quick Start
 
 ```python
-from openvto import OpenVTO
+import openvto
 
-vto = OpenVTO()
-print(vto.hello())  # Hello from OpenVTO!
+vto = openvto.OpenVTO()
 ```
 
 ---
@@ -48,11 +47,7 @@ print(vto.hello())  # Hello from OpenVTO!
 OpenVTO includes bundled demo assets for quick testing and prototyping. Access them via the `openvto.example` module:
 
 ```python
-from openvto import example
-
-# List available clothing categories
-categories = example.list_clothes_categories()
-# ['jackets', 'pants', 'shirts']
+from openvto.example import example
 
 # Get all items in a category
 all_jackets = example.clothes("jackets")

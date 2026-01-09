@@ -3,7 +3,12 @@
 import pytest
 
 from openvto import OpenVTO
-from openvto.pipelines import compose_clothing, generate_avatar, generate_tryon, generate_videoloop
+from openvto.pipelines import (
+    compose_clothing,
+    generate_avatar,
+    generate_tryon,
+    generate_videoloop,
+)
 from openvto.providers import MockProvider
 from openvto.types import ClothingItem, Outfit
 
@@ -31,7 +36,12 @@ def create_test_image() -> bytes:
 
     compressed = zlib.compress(raw_data, 9)
     idat_crc = zlib.crc32(b"IDAT" + compressed) & 0xFFFFFFFF
-    idat = struct.pack(">I", len(compressed)) + b"IDAT" + compressed + struct.pack(">I", idat_crc)
+    idat = (
+        struct.pack(">I", len(compressed))
+        + b"IDAT"
+        + compressed
+        + struct.pack(">I", idat_crc)
+    )
 
     # IEND
     iend_crc = zlib.crc32(b"IEND") & 0xFFFFFFFF
@@ -58,7 +68,6 @@ class TestGenerateAvatar:
         assert result.avatar.image is not None
         assert len(result.avatar.image) > 0
         assert result.meta is not None
-
 
     def test_generate_avatar_different_backgrounds(self):
         """Test avatar generation with different backgrounds."""
@@ -290,4 +299,3 @@ class TestOpenVTOClient:
 
         video = vto.generate_videoloop(static_image=tryon)
         assert video.video is not None
-

@@ -106,7 +106,9 @@ class TestClothes:
 
     def test_view_without_i_raises_value_error(self):
         """Test that specifying view without i raises ValueError."""
-        with pytest.raises(ValueError, match="Cannot specify 'view' without specifying 'i'"):
+        with pytest.raises(
+            ValueError, match="Cannot specify 'view' without specifying 'i'"
+        ):
             example.clothes("jackets", view="front")
 
     def test_return_type_bytes(self):
@@ -234,4 +236,3 @@ class TestImportFromOpenvto:
         assert hasattr(example, "person")
         assert hasattr(example, "list_clothes_categories")
         assert hasattr(example, "list_clothes_items")
-
