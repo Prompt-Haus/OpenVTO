@@ -31,8 +31,16 @@ class GoogleProvider(Provider):
     - Image: gemini-2.5-flash-image (NanoBanana), gemini-3-pro-image-preview (NanoBanana Pro)
     - Video: veo-3.1, veo-3.1-fast
 
-    Environment variables:
-    - GOOGLE_API_KEY: API key for Google AI services
+    Supports two authentication modes:
+
+    1. Google AI Studio (default):
+       - Set GOOGLE_API_KEY environment variable
+
+    2. Vertex AI (enterprise):
+       - Set GOOGLE_GENAI_USE_VERTEXAI=true
+       - Set GOOGLE_CLOUD_PROJECT to your GCP project ID
+       - Set GOOGLE_CLOUD_LOCATION (optional, defaults to us-central1)
+       - Ensure proper GCP authentication (gcloud auth, service account, etc.)
     """
 
     DEFAULT_IMAGE_MODEL = ImageModel.NANO_BANANA_PRO.value
@@ -64,25 +72,57 @@ class GoogleProvider(Provider):
         return "google"
 
     def _ensure_client(self) -> Any:
-        """Lazily initialize the Google AI client."""
-        if self._client is None:
-            if not self._api_key:
-                raise ProviderAuthError(
-                    "Google API key not found. Set GOOGLE_API_KEY environment variable "
-                    "or pass api_key to the provider.",
-                    provider=self.name,
-                )
+        """Lazily initialize the Google AI client.
 
+        Supports two modes:
+        - Google AI Studio: Uses GOOGLE_API_KEY
+        - Vertex AI: Uses GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION,
+          and GOOGLE_GENAI_USE_VERTEXAI=true
+        """
+        if self._client is None:
             try:
                 from google import genai
-
-                self._client = genai.Client(api_key=self._api_key)
             except ImportError:
                 raise ProviderError(
                     "google-genai package not installed. "
                     "Install with: pip install google-genai",
                     provider=self.name,
                 )
+
+            # Check if Vertex AI mode is requested
+            use_vertexai = os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "").lower() in (
+                "true",
+                "1",
+                "yes",
+            )
+
+            if use_vertexai:
+                # Vertex AI mode - uses GCP project and location
+                project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+                location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+
+                if not project:
+                    raise ProviderAuthError(
+                        "GOOGLE_CLOUD_PROJECT environment variable is required when "
+                        "using Vertex AI mode (GOOGLE_GENAI_USE_VERTEXAI=true).",
+                        provider=self.name,
+                    )
+
+                self._client = genai.Client(
+                    vertexai=True,
+                    project=project,
+                    location=location,
+                )
+            else:
+                # Google AI Studio mode - uses API key
+                if not self._api_key:
+                    raise ProviderAuthError(
+                        "Google API key not found. Set GOOGLE_API_KEY environment variable "
+                        "or pass api_key to the provider.",
+                        provider=self.name,
+                    )
+
+                self._client = genai.Client(api_key=self._api_key)
 
         return self._client
 
@@ -303,6 +343,7 @@ class GoogleProvider(Provider):
                     aspect_ratio="9:16",
                     resolution="720p",
                     duration_seconds=int(request.duration_seconds),
+                    generate_audio=False,
                 ),
             )
 
@@ -311,7 +352,10 @@ class GoogleProvider(Provider):
                 time.sleep(5)
                 operation = client.operations.get(operation)
 
-            video_data = operation.result.generated_videos[0]
+            # Extract video bytes from the response
+            # Response structure: GeneratedVideo(video=Video(video_bytes=bytes, mime_type=str))
+            generated_video = operation.result.generated_videos[0]
+            video_bytes = generated_video.video.video_bytes
             latency = (time.perf_counter() - start) * 1000
 
             # Use input image as first frame, last frame from video if available
@@ -319,7 +363,7 @@ class GoogleProvider(Provider):
             last_frame = request.image  # TODO: Extract actual last frame from video
 
             return VideoGenerationResponse(
-                video=video_data,
+                video=video_bytes,
                 first_frame=first_frame,
                 last_frame=last_frame,
                 duration_seconds=request.duration_seconds,
