@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
 authors = [
-    { name = "OpenVTO Contributors" }
+    { name = "Prompt Haus" }
 ]
 keywords = [
     "virtual-try-on",
