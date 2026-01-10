@@ -3,7 +3,7 @@
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import openvto
@@ -11,6 +11,7 @@ from openvto import OpenVTO
 
 from app import dependencies
 from app.routers import assets, generate, health
+from app.services.auth import check_api_key
 
 load_dotenv()
 
@@ -42,4 +43,4 @@ app.add_middleware(
 # Register routers
 app.include_router(health.router)
 app.include_router(assets.router)
-app.include_router(generate.router)
+app.include_router(generate.router, dependencies=[Depends(check_api_key)])
