@@ -87,7 +87,7 @@ class OpenVTO:
         posture: ImageInput,
         *,
         background: str = "studio",
-        keep_clothes: bool = False,
+        keep_clothes: bool = True,
         prompt: str | None = None,
         seed: int | None = None,
     ) -> AvatarResult:
