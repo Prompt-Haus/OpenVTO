@@ -1,0 +1,46 @@
+{
+  "name": "openvto-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Open-source toolkit for building studio-quality virtual try-ons with generative AI",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Prompt-Haus/OpenVTO.git"
+  },
+  "keywords": [
+    "virtual-try-on",
+    "fashion",
+    "generative-ai",
+    "monorepo"
+  ],
+  "author": "Prompt Haus",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "clean": "turbo clean && rm -rf node_modules",
+    "playground": "pnpm --filter @openvto/playground",
+    "api": "cd apps/api && source venv/bin/activate && python -m uvicorn app.main:app --reload",
+    "api:install": "cd apps/api && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
+    "sdk:test": "cd packages/sdk && source venv/bin/activate && pytest",
+    "sdk:lint": "cd packages/sdk && source venv/bin/activate && ruff check .",
+    "sdk:install": "cd packages/sdk && python3 -m venv venv && source venv/bin/activate && pip install -e '.[dev]'",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.0",
+    "turbo": "^2.3.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
+
