@@ -20,9 +20,3 @@ async def root():
 async def health():
     """Health check endpoint."""
     return {"status": "ok", "version": openvto.__version__}
-
-
-@router.get("/env_vars")
-async def env_vars():
-    """Environment variables endpoint."""
-    return os.environ
