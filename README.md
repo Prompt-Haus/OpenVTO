@@ -1,3 +1,5 @@
+![OpenVTO Header](openvto-header.jpg)
+
 # OpenVTO
 
 **OpenVTO** is an open-source toolkit for building studio-quality virtual try-ons with generative AI, both as high-end still photos and short animated loops.
@@ -8,21 +10,21 @@ OpenVTO is designed for **speed**, **consistency**, and **aesthetics**: uniform 
 
 ---
 
+## Goal
+
+OpenVTO's goal is simple: **make it easy for teams to ship virtual try-ons that look good enough to market, not just "tech demos."**
+
+---
+
 ## What OpenVTO Includes
 
 | Feature | Description |
 |---------|-------------|
-| **Avatar Base Layer** | Generate studio-quality avatars from 1–2 photos with controlled lighting and backgrounds |
-| **Outfit Compositing** | Garment swap from catalog images — single items or complete bundles |
-| **Still → Video Pipeline** | Animated try-ons as loop-friendly 4–8s clips using image-to-video models |
-| **Prompt Templates & Guardrails** | Keep identity, body shape, and style consistent across generations |
-| **Reference Implementations** | Python library with reproducible examples to get you started fast |
-
----
-
-## Goal
-
-OpenVTO's goal is simple: **make it easy for teams to ship virtual try-ons that look good enough to market, not just "tech demos."**
+| **Avatar Generation** | Generate studio-quality avatars from 2 photos (selfie and posture) with controlled lighting and backgrounds |
+| **Virtual Try-On** | Garment swap from catalog images — single items or complete outfits |
+| **Video Loop Generation** | Animated try-ons as loop-friendly 4–8s clips using image-to-video models |
+| **Prompt Presets & Guardrails** | Keep identity, body shape, and style consistent across generations |
+| **Example Implementations** | Just Jupyter notebooks with code and visualizations |
 
 ---
 
