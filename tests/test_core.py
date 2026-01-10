@@ -6,7 +6,7 @@ from openvto.types import ClothingItem, GenerationMeta, ImageModel, Outfit, Vide
 
 def test_version():
     """Test that version is defined."""
-    assert __version__ == "0.1.1"
+    assert __version__ == "0.1.2"
 
 
 def test_client_initialization_with_mock():
