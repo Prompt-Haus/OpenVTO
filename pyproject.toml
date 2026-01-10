@@ -52,10 +52,6 @@ Issues = "https://github.com/Prompt-Haus/OpenVTO/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["openvto"]
 
-# Include all data files (assets) in the package
-[tool.hatch.build.targets.wheel.force-include]
-"openvto/assets" = "openvto/assets"
-
 [tool.hatch.build.targets.sdist]
 include = [
     "openvto/**/*.py",
