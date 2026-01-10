@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, overload
 
 from openvto.errors import ConfigurationError
 from openvto.pipelines import generate_avatar, generate_tryon, generate_videoloop
@@ -13,6 +13,8 @@ from openvto.types import ImageModel, PipelineResult, VideoModel
 from openvto.utils.timing import Timer
 
 if TYPE_CHECKING:
+    from PIL.Image import Image as PILImage
+
     from openvto.types import (
         AvatarResult,
         ImageInput,
@@ -20,6 +22,11 @@ if TYPE_CHECKING:
         TryOnResult,
         VideoLoopResult,
     )
+
+# Return type options
+AvatarReturnType = Literal["result", "pil", "bytes"]
+TryOnReturnType = Literal["result", "pil", "bytes"]
+VideoLoopReturnType = Literal["result", "bytes", "b64"]
 
 
 class OpenVTO:
@@ -81,6 +88,8 @@ class OpenVTO:
         """Get the current provider instance."""
         return self._provider
 
+    # Overloads for generate_avatar return type
+    @overload
     def generate_avatar(
         self,
         selfie: ImageInput,
@@ -90,7 +99,59 @@ class OpenVTO:
         keep_clothes: bool = True,
         prompt: str | None = None,
         seed: int | None = None,
-    ) -> AvatarResult:
+        return_type: None = None,
+    ) -> AvatarResult: ...
+
+    @overload
+    def generate_avatar(
+        self,
+        selfie: ImageInput,
+        posture: ImageInput,
+        *,
+        background: str = "studio",
+        keep_clothes: bool = True,
+        prompt: str | None = None,
+        seed: int | None = None,
+        return_type: Literal["result"],
+    ) -> AvatarResult: ...
+
+    @overload
+    def generate_avatar(
+        self,
+        selfie: ImageInput,
+        posture: ImageInput,
+        *,
+        background: str = "studio",
+        keep_clothes: bool = True,
+        prompt: str | None = None,
+        seed: int | None = None,
+        return_type: Literal["pil"],
+    ) -> PILImage: ...
+
+    @overload
+    def generate_avatar(
+        self,
+        selfie: ImageInput,
+        posture: ImageInput,
+        *,
+        background: str = "studio",
+        keep_clothes: bool = True,
+        prompt: str | None = None,
+        seed: int | None = None,
+        return_type: Literal["bytes"],
+    ) -> bytes: ...
+
+    def generate_avatar(
+        self,
+        selfie: ImageInput,
+        posture: ImageInput,
+        *,
+        background: str = "studio",
+        keep_clothes: bool = True,
+        prompt: str | None = None,
+        seed: int | None = None,
+        return_type: AvatarReturnType | None = None,
+    ) -> AvatarResult | PILImage | bytes:
         """Generate a studio-quality avatar from selfie and posture images.
 
         Args:
@@ -101,11 +162,15 @@ class OpenVTO:
                 replace with neutral gray bodysuit for clean try-on base.
             prompt: Optional custom prompt override.
             seed: Random seed for reproducibility.
+            return_type: How to return the result:
+                - None or "result" (default): Return full AvatarResult object
+                - "pil": Return as PIL Image
+                - "bytes": Return raw image bytes
 
         Returns:
-            AvatarResult with the generated avatar and metadata.
+            AvatarResult, PIL Image, or bytes depending on return_type.
         """
-        return generate_avatar(
+        result = generate_avatar(
             selfie=selfie,
             posture=posture,
             provider=self._provider,
@@ -116,6 +181,30 @@ class OpenVTO:
             seed=seed,
         )
 
+        # Handle return type conversion
+        if return_type is None or return_type == "result":
+            return result
+        elif return_type == "bytes":
+            return result.image
+        elif return_type == "pil":
+            try:
+                import io
+
+                from PIL import Image
+            except ImportError:
+                raise ImportError(
+                    "Pillow is required for return_type='pil'. "
+                    "Install it with: pip install Pillow"
+                ) from None
+            return Image.open(io.BytesIO(result.image))
+        else:
+            raise ValueError(
+                f"Invalid return_type '{return_type}'. "
+                "Valid options: None, 'result', 'pil', 'bytes'"
+            )
+
+    # Overloads for generate_tryon return type
+    @overload
     def generate_tryon(
         self,
         avatar: AvatarResult | ImageInput,
@@ -124,7 +213,55 @@ class OpenVTO:
         prompt: str | None = None,
         compose: bool = True,
         seed: int | None = None,
-    ) -> TryOnResult:
+        return_type: None = None,
+    ) -> TryOnResult: ...
+
+    @overload
+    def generate_tryon(
+        self,
+        avatar: AvatarResult | ImageInput,
+        clothes: list[ImageInput] | Outfit,
+        *,
+        prompt: str | None = None,
+        compose: bool = True,
+        seed: int | None = None,
+        return_type: Literal["result"],
+    ) -> TryOnResult: ...
+
+    @overload
+    def generate_tryon(
+        self,
+        avatar: AvatarResult | ImageInput,
+        clothes: list[ImageInput] | Outfit,
+        *,
+        prompt: str | None = None,
+        compose: bool = True,
+        seed: int | None = None,
+        return_type: Literal["pil"],
+    ) -> PILImage: ...
+
+    @overload
+    def generate_tryon(
+        self,
+        avatar: AvatarResult | ImageInput,
+        clothes: list[ImageInput] | Outfit,
+        *,
+        prompt: str | None = None,
+        compose: bool = True,
+        seed: int | None = None,
+        return_type: Literal["bytes"],
+    ) -> bytes: ...
+
+    def generate_tryon(
+        self,
+        avatar: AvatarResult | ImageInput,
+        clothes: list[ImageInput] | Outfit,
+        *,
+        prompt: str | None = None,
+        compose: bool = True,
+        seed: int | None = None,
+        return_type: TryOnReturnType | None = None,
+    ) -> TryOnResult | PILImage | bytes:
         """Generate virtual try-on with clothing on avatar.
 
         Args:
@@ -133,11 +270,15 @@ class OpenVTO:
             prompt: Optional custom prompt override.
             compose: Whether to composite clothing images first.
             seed: Random seed for reproducibility.
+            return_type: How to return the result:
+                - None or "result" (default): Return full TryOnResult object
+                - "pil": Return as PIL Image
+                - "bytes": Return raw image bytes
 
         Returns:
-            TryOnResult with generated try-on and metadata.
+            TryOnResult, PIL Image, or bytes depending on return_type.
         """
-        return generate_tryon(
+        result = generate_tryon(
             avatar=avatar,
             clothes=clothes,
             provider=self._provider,
@@ -147,6 +288,30 @@ class OpenVTO:
             seed=seed,
         )
 
+        # Handle return type conversion
+        if return_type is None or return_type == "result":
+            return result
+        elif return_type == "bytes":
+            return result.image
+        elif return_type == "pil":
+            try:
+                import io
+
+                from PIL import Image
+            except ImportError:
+                raise ImportError(
+                    "Pillow is required for return_type='pil'. "
+                    "Install it with: pip install Pillow"
+                ) from None
+            return Image.open(io.BytesIO(result.image))
+        else:
+            raise ValueError(
+                f"Invalid return_type '{return_type}'. "
+                "Valid options: None, 'result', 'pil', 'bytes'"
+            )
+
+    # Overloads for generate_videoloop return type
+    @overload
     def generate_videoloop(
         self,
         static_image: ImageInput,
@@ -155,7 +320,55 @@ class OpenVTO:
         seconds: float = 4.0,
         prompt: str | None = None,
         seed: int | None = None,
-    ) -> VideoLoopResult:
+        return_type: None = None,
+    ) -> VideoLoopResult: ...
+
+    @overload
+    def generate_videoloop(
+        self,
+        static_image: ImageInput,
+        *,
+        mode: str = "360",
+        seconds: float = 4.0,
+        prompt: str | None = None,
+        seed: int | None = None,
+        return_type: Literal["result"],
+    ) -> VideoLoopResult: ...
+
+    @overload
+    def generate_videoloop(
+        self,
+        static_image: ImageInput,
+        *,
+        mode: str = "360",
+        seconds: float = 4.0,
+        prompt: str | None = None,
+        seed: int | None = None,
+        return_type: Literal["bytes"],
+    ) -> bytes: ...
+
+    @overload
+    def generate_videoloop(
+        self,
+        static_image: ImageInput,
+        *,
+        mode: str = "360",
+        seconds: float = 4.0,
+        prompt: str | None = None,
+        seed: int | None = None,
+        return_type: Literal["b64"],
+    ) -> str: ...
+
+    def generate_videoloop(
+        self,
+        static_image: ImageInput,
+        *,
+        mode: str = "360",
+        seconds: float = 4.0,
+        prompt: str | None = None,
+        seed: int | None = None,
+        return_type: VideoLoopReturnType | None = None,
+    ) -> VideoLoopResult | bytes | str:
         """Generate an animated video loop from a static try-on image.
 
         Args:
@@ -164,11 +377,15 @@ class OpenVTO:
             seconds: Video duration in seconds (4-8).
             prompt: Optional custom prompt override.
             seed: Random seed for reproducibility.
+            return_type: How to return the result:
+                - None or "result" (default): Return full VideoLoopResult object
+                - "bytes": Return raw video bytes
+                - "b64": Return base64-encoded string (for HTML embedding)
 
         Returns:
-            VideoLoopResult with the generated video and metadata.
+            VideoLoopResult, bytes, or base64 string depending on return_type.
         """
-        return generate_videoloop(
+        result = generate_videoloop(
             static_image=static_image,
             provider=self._provider,
             mode=mode,
@@ -176,6 +393,21 @@ class OpenVTO:
             prompt_override=prompt,
             seed=seed,
         )
+
+        # Handle return type conversion
+        if return_type is None or return_type == "result":
+            return result
+        elif return_type == "bytes":
+            return result.video
+        elif return_type == "b64":
+            import base64
+
+            return base64.b64encode(result.video).decode("utf-8")
+        else:
+            raise ValueError(
+                f"Invalid return_type '{return_type}'. "
+                "Valid options: None, 'result', 'bytes', 'b64'"
+            )
 
     def pipeline(
         self,
