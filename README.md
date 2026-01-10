@@ -32,6 +32,19 @@ OpenVTO's goal is simple: **make it easy for teams to ship virtual try-ons that 
 pip install openvto
 ```
 
+## Google Vertex AI Setup
+
+1. Set up a Google Cloud project and enable the Vertex AI API.
+2. Create a service account and download the JSON key file.
+3. Set the following environment variables:
+
+```bash
+export GOOGLE_SERVICE_ACCOUNT_KEY="path/to/service-account-key.json"
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+export GOOGLE_CLOUD_LOCATION="us-central1"
+export GOOGLE_GENAI_USE_VERTEXAI="true"
+```
+
 ## Quick Start
 
 ```python
