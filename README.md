@@ -179,6 +179,18 @@ img = example.clothes("jackets", i=1, view="front", return_type="pil")
 
 ---
 
+## FastAPI Example
+
+OpenVTO includes a FastAPI example server. To run it, use the following command:
+
+```bash
+uvicorn fastapi.app.main:app --reload
+```
+
+Then, you can access the API at `http://localhost:8000`.
+
+---
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
