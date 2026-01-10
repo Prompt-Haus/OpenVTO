@@ -32,13 +32,83 @@ OpenVTO's goal is simple: **make it easy for teams to ship virtual try-ons that 
 pip install openvto
 ```
 
-## Client Quick Start
+## Quick Start
 
 ```python
 import openvto
 
+# Initialize the client (uses Google Vertex AI by default)
 vto = openvto.OpenVTO()
+
+# 1. Generate a studio-quality avatar from selfie + posture photos
+avatar = vto.generate_avatar(
+    selfie="selfie.jpg",
+    posture="posture.jpg",
+    return_type="pil"
+)
+
+# 2. Apply clothing items to the avatar
+tryon = vto.generate_tryon(
+    avatar=avatar,
+    clothes=["jacket.jpg", "pants.jpg", "shirt.jpg"],
+    return_type="pil"
+)
+
+# 3. Generate an animated video loop
+video = vto.generate_videoloop(
+    static_image=tryon,
+    mode="turn_360",
+    return_type="b64"
+)
 ```
+
+---
+
+## Pipelines
+
+### Avatar Generation
+
+Generate a studio-quality avatar from input photos. Requires a selfie (for identity) and a posture image (for pose reference).
+
+```python
+avatar = vto.generate_avatar(
+    selfie=selfie_image,
+    posture=posture_image
+)
+```
+
+### Virtual Try-On
+
+Apply clothing items to an avatar. Accepts a list of garment images (front views).
+
+```python
+tryon = vto.generate_tryon(
+    avatar=avatar,
+    clothes=[jacket, pants, shirt]
+)
+```
+
+### Video Loop Generation
+
+Turn a static try-on result into an animated 4-8s video loop.
+
+```python
+video = vto.generate_videoloop(
+    static_image=tryon,
+    mode="turn_360"
+)
+```
+
+---
+
+## Models
+
+OpenVTO uses these models from Google Vertex AI by default:
+
+| Model | Purpose |
+|-------|---------|
+| `gemini-3-pro-image-preview` | High-quality image generation |
+| `veo-3.1-fast-generate-preview` | Cost-effective video generation |
 
 ---
 
