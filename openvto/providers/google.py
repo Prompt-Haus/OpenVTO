@@ -23,6 +23,10 @@ from openvto.providers.base import (
 )
 from openvto.types import ImageModel, VideoModel
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 class GoogleProvider(Provider):
     """Google provider using Gemini for images and Veo for video.
@@ -40,7 +44,9 @@ class GoogleProvider(Provider):
        - Set GOOGLE_GENAI_USE_VERTEXAI=true
        - Set GOOGLE_CLOUD_PROJECT to your GCP project ID
        - Set GOOGLE_CLOUD_LOCATION (optional, defaults to us-central1)
-       - Ensure proper GCP authentication (gcloud auth, service account, etc.)
+       - Set credentials via one of:
+         - GOOGLE_APPLICATION_CREDENTIALS: path to service account JSON file
+         - GOOGLE_CREDENTIALS_JSON: service account JSON as a string (for containerized envs)
     """
 
     DEFAULT_IMAGE_MODEL = ImageModel.NANO_BANANA_PRO.value
@@ -77,7 +83,7 @@ class GoogleProvider(Provider):
         Supports two modes:
         - Google AI Studio: Uses GOOGLE_API_KEY
         - Vertex AI: Uses GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION,
-          and GOOGLE_GENAI_USE_VERTEXAI=true
+          GOOGLE_GENAI_USE_VERTEXAI=true andService Account JSON Credentials
         """
         if self._client is None:
             try:
@@ -108,11 +114,43 @@ class GoogleProvider(Provider):
                         provider=self.name,
                     )
 
-                self._client = genai.Client(
-                    vertexai=True,
-                    project=project,
-                    location=location,
+                # Check for credentials: file path or JSON string
+                service_account_json_path = os.environ.get(
+                    "GOOGLE_APPLICATION_CREDENTIALS"
                 )
+                credentials_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+
+                if credentials_json:
+                    # Load credentials from JSON string with required scopes
+                    import json
+
+                    from google.oauth2 import service_account
+
+                    scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+                    credentials = service_account.Credentials.from_service_account_info(
+                        json.loads(credentials_json),
+                        scopes=scopes,
+                    )
+                    self._client = genai.Client(
+                        vertexai=True,
+                        project=project,
+                        location=location,
+                        credentials=credentials,
+                    )
+                elif service_account_json_path:
+                    # Use default credentials from file path
+                    self._client = genai.Client(
+                        vertexai=True,
+                        project=project,
+                        location=location,
+                    )
+                else:
+                    raise ProviderAuthError(
+                        "Vertex AI credentials not found. Set either "
+                        "GOOGLE_APPLICATION_CREDENTIALS (path to JSON file) or "
+                        "GOOGLE_CREDENTIALS_JSON (JSON string) environment variable.",
+                        provider=self.name,
+                    )
             else:
                 # Google AI Studio mode - uses API key
                 if not self._api_key:
