@@ -1,6 +1,6 @@
 """OpenVTO - Open-source toolkit for studio-quality virtual try-ons with generative AI."""
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 from openvto.client import OpenVTO
 from openvto.types import (

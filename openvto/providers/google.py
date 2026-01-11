@@ -239,11 +239,20 @@ class GoogleProvider(Provider):
 
             aspect_ratio = self._get_aspect_ratio(request.width, request.height)
 
+            # Build contents with proper Content structure
+            contents = [
+                types.Content(
+                    role="user",
+                    parts=[types.Part(text=request.prompt)],
+                )
+            ]
+
             response = client.models.generate_content(
                 model=self._image_model,
-                contents=[request.prompt],
+                contents=contents,
                 config=types.GenerateContentConfig(
-                    temperature=0,
+                    temperature=1,
+                    top_p=0.95,
                     response_modalities=["IMAGE"],
                     image_config=types.ImageConfig(
                         aspect_ratio=aspect_ratio,
@@ -285,10 +294,10 @@ class GoogleProvider(Provider):
 
             aspect_ratio = self._get_aspect_ratio(request.width, request.height)
 
-            # Build content list: prompt + images
-            contents: list = [request.prompt]
+            # Build parts list: images first, then prompt
+            parts: list = []
 
-            # Add reference image (avatar)
+            # Add reference image (posture/body)
             ref_mime_type = self._detect_mime_type(request.reference_image)
             ref_image = types.Part(
                 inline_data=types.Blob(
@@ -296,7 +305,18 @@ class GoogleProvider(Provider):
                     data=request.reference_image,
                 )
             )
-            contents.append(ref_image)
+            parts.append(ref_image)
+
+            # Add selfie image if provided (for identity preservation)
+            if request.selfie_image is not None:
+                selfie_mime_type = self._detect_mime_type(request.selfie_image)
+                selfie_image = types.Part(
+                    inline_data=types.Blob(
+                        mime_type=selfie_mime_type,
+                        data=request.selfie_image,
+                    )
+                )
+                parts.append(selfie_image)
 
             # Add clothing image if provided (for try-on)
             if request.clothing_image is not None:
@@ -307,13 +327,25 @@ class GoogleProvider(Provider):
                         data=request.clothing_image,
                     )
                 )
-                contents.append(clothing_image)
+                parts.append(clothing_image)
+
+            # Add prompt text as last part
+            parts.append(types.Part(text=request.prompt))
+
+            # Build contents with proper Content structure
+            contents = [
+                types.Content(
+                    role="user",
+                    parts=parts,
+                )
+            ]
 
             response = client.models.generate_content(
                 model=self._image_model,
                 contents=contents,
                 config=types.GenerateContentConfig(
-                    temperature=0,
+                    temperature=1,
+                    top_p=0.95,
                     response_modalities=["IMAGE"],
                     image_config=types.ImageConfig(
                         aspect_ratio=aspect_ratio,
