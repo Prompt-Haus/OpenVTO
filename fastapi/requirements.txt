@@ -2,4 +2,4 @@ fastapi==0.100.0
 hypercorn==0.14.4
 python-dotenv>=1.0.0
 python-multipart>=0.0.6
-openvto>=0.1.2
+openvto>=0.1.3
