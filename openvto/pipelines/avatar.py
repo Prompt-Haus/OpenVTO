@@ -97,11 +97,11 @@ def generate_avatar(
                 "for virtual try-on. Remove all original clothing and accessories."
             )
 
-        # Render base prompt and append clothing instruction
-        base_prompt = prompt_config.render(
+        # Render base prompt as full JSON and append clothing instruction
+        base_prompt = prompt_config.render_json(
             subject="the person from the reference image"
         )
-        prompt = f"{base_prompt}. {clothing_instruction}"
+        prompt = f"{base_prompt}\n\n{clothing_instruction}"
 
     # Create generation request
     request = ImageGenerationRequest(
@@ -110,6 +110,7 @@ def generate_avatar(
         height=height,
         seed=seed,
         reference_image=posture_normalized,  # Use posture as reference for body
+        selfie_image=selfie_normalized,  # Use selfie for facial identity preservation
     )
 
     # Generate avatar

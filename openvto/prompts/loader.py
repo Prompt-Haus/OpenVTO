@@ -26,6 +26,7 @@ class PromptConfig:
         negative_prompt: Negative prompt string.
         variables: Variable definitions.
         full_config: Complete raw config dict.
+        preset_config: The full preset configuration dict.
     """
 
     name: str
@@ -36,6 +37,33 @@ class PromptConfig:
     negative_prompt: str
     variables: dict[str, Any]
     full_config: dict[str, Any]
+    preset_config: dict[str, Any]
+
+    def render_json(self, **kwargs: Any) -> str:
+        """Render the full preset configuration as a JSON string.
+
+        Args:
+            **kwargs: Variable values to substitute in string values.
+
+        Returns:
+            JSON string representation of the preset config with variables substituted.
+
+        Raises:
+            PromptError: If required variable is missing.
+        """
+        # Check required variables
+        for var_name, var_config in self.variables.items():
+            if var_config.get("required", False) and var_name not in kwargs:
+                raise PromptError(f"Missing required variable: {var_name}")
+
+        # Convert preset config to JSON string
+        json_str = json.dumps(self.preset_config, indent=4)
+
+        # Substitute variables in the JSON string
+        for key, value in kwargs.items():
+            json_str = json_str.replace(f"{{{key}}}", str(value))
+
+        return json_str
 
     def render(self, **kwargs: Any) -> str:
         """Render the prompt with variable substitution.
@@ -143,6 +171,7 @@ class PromptLoader:
             negative_prompt=config.get("negative_prompt", ""),
             variables=config.get("variables", {}),
             full_config=config,
+            preset_config=preset_config,
         )
 
     def list_prompts(self) -> list[str]:
