@@ -26,11 +26,11 @@
     "test": "turbo test",
     "clean": "turbo clean && rm -rf node_modules",
     "playground": "pnpm --filter @openvto/playground",
-    "api": "cd apps/api && source venv/bin/activate && python -m uvicorn app.main:app --reload",
-    "api:install": "cd apps/api && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
-    "sdk:test": "cd packages/sdk && source venv/bin/activate && pytest",
-    "sdk:lint": "cd packages/sdk && source venv/bin/activate && ruff check .",
-    "sdk:install": "cd packages/sdk && python3 -m venv venv && source venv/bin/activate && pip install -e '.[dev]'",
+    "api": "cd apps/api && . venv/bin/activate && API_KEY=openvto-dev GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/vertex-runner-service-account-key.json python -m uvicorn app.main:app --reload",
+    "api:install": "cd apps/api && python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt",
+    "sdk:test": "cd packages/sdk && . venv/bin/activate && pytest",
+    "sdk:lint": "cd packages/sdk && . venv/bin/activate && ruff check .",
+    "sdk:install": "cd packages/sdk && python3 -m venv venv && . venv/bin/activate && pip install -e '.[dev]'",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {

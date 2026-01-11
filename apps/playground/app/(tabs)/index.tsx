@@ -310,6 +310,7 @@ export default function TryOnScreen() {
   const [generationMode, setGenerationMode] = useState<'image' | 'video'>('image');
   const [resultUri, setResultUri] = useState<string | null>(null);
   const [resultType, setResultType] = useState<'image' | 'video'>('image');
+  const [isConvertingToVideo, setIsConvertingToVideo] = useState(false);
   
   // Data State
   const [shirts, setShirts] = useState<DisplayItem[]>([]);
@@ -698,6 +699,68 @@ export default function TryOnScreen() {
     }
   };
 
+  // Convert existing image result to video
+  const handleCreateVideoFromResult = async () => {
+    if (!resultUri || resultType !== 'image' || isConvertingToVideo) return;
+
+    setIsConvertingToVideo(true);
+
+    try {
+      // Convert current image to base64
+      const imageB64 = await imageUriToBase64(resultUri);
+
+      // Generate video from the image
+      const videoResult = await generateVideoLoop({
+        image_b64: imageB64,
+        mode: '360',
+      });
+
+      // Save first frame as thumbnail
+      let videoThumbnail: string | undefined;
+      if (videoResult.first_frame_b64) {
+        videoThumbnail = base64ToDataUri(videoResult.first_frame_b64, 'image/png');
+      }
+
+      // Save video to temp file
+      const videoFileName = `vto_video_${Date.now()}.mp4`;
+      const videoFilePath = `${FileSystem.cacheDirectory}${videoFileName}`;
+
+      const base64Data = videoResult.video_b64.includes(',')
+        ? videoResult.video_b64.split(',')[1]
+        : videoResult.video_b64;
+
+      await FileSystem.writeAsStringAsync(videoFilePath, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Verify file exists
+      const fileInfo = await FileSystem.getInfoAsync(videoFilePath);
+      console.log('[VideoConvert] Saved to:', videoFilePath, 'exists:', fileInfo.exists);
+
+      if (!fileInfo.exists) {
+        throw new Error('Video file was not saved correctly');
+      }
+
+      // Update to show video
+      setResultUri(videoFilePath);
+      setResultType('video');
+
+      // Add to history
+      addToHistory({
+        type: 'video',
+        uri: videoFilePath,
+        thumbnail: videoThumbnail,
+      });
+
+      Alert.alert('Success', 'Video created successfully!');
+    } catch (error) {
+      console.error('Video conversion failed:', error);
+      Alert.alert('Error', 'Failed to create video. Please try again.');
+    } finally {
+      setIsConvertingToVideo(false);
+    }
+  };
+
   // Gesture Handler (new API for Reanimated v3+)
   const startY = useSharedValue(0);
   const panGesture = Gesture.Pan()
@@ -736,6 +799,8 @@ export default function TryOnScreen() {
       >
         {isGenerating ? (
           <GeneratingAnimation mode={generationMode} />
+        ) : isConvertingToVideo ? (
+          <GeneratingAnimation mode="video" />
         ) : resultUri ? (
           resultType === 'video' ? (
             <Video
@@ -769,6 +834,18 @@ export default function TryOnScreen() {
           />
         )}
       </TouchableOpacity>
+
+      {/* Create Video FAB - Shows when viewing image result */}
+      {resultUri && resultType === 'image' && !isGenerating && !isConvertingToVideo && (
+        <TouchableOpacity 
+          style={styles.createVideoFab} 
+          onPress={handleCreateVideoFromResult}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="videocam" size={22} color="#fff" />
+          <Text style={styles.createVideoFabText}>Create Video</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Bottom Sheet */}
       <Animated.View style={[styles.bottomSheet, animatedStyle]}>
@@ -1441,5 +1518,29 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     marginTop: 16,
+  },
+  // Create Video FAB
+  createVideoFab: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#000',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 100,
+  },
+  createVideoFabText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
