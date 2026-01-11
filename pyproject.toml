@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "OpenVTO"
-version = "0.1.2"
+version = "0.1.3"
 description = "Open-source toolkit for building studio-quality virtual try-ons with generative AI"
 readme = "README.md"
 license = "MIT"
