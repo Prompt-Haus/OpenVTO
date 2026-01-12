@@ -19,6 +19,16 @@ from openvto.utils.images import load_image_bytes
 from openvto.utils.timing import Timer
 
 
+# Aspect ratio to dimensions mapping (using 1K resolution)
+ASPECT_RATIO_DIMENSIONS: dict[str, tuple[int, int]] = {
+    "9:16": (720, 1280),
+    "16:9": (1280, 720),
+    "1:1": (1024, 1024),
+    "4:3": (1024, 768),
+    "3:4": (768, 1024),
+}
+
+
 def generate_tryon(
     avatar: AvatarResult | bytes | str,
     clothes: list[ClothingItem] | Outfit | list[str] | list[bytes],
@@ -28,6 +38,7 @@ def generate_tryon(
     prompt_override: str | None = None,
     compose: bool = True,
     seed: int | None = None,
+    aspect_ratio: str | None = None,
 ) -> TryOnResult:
     """Generate virtual try-on with clothing on avatar.
 
@@ -46,6 +57,8 @@ def generate_tryon(
         prompt_override: Optional full prompt override.
         compose: Whether to composite multiple clothing items.
         seed: Random seed for reproducibility.
+        aspect_ratio: Output aspect ratio (e.g., "9:16", "16:9", "1:1", "4:3", "3:4").
+            If None, uses avatar dimensions or defaults to "9:16".
 
     Returns:
         TryOnResult with generated try-on and metadata.
@@ -66,6 +79,15 @@ def generate_tryon(
         # Default dimensions
         width = 720
         height = 1280
+
+    # Override dimensions if aspect_ratio is provided
+    if aspect_ratio is not None:
+        if aspect_ratio not in ASPECT_RATIO_DIMENSIONS:
+            raise ValidationError(
+                f"Invalid aspect_ratio '{aspect_ratio}'. "
+                f"Supported values: {', '.join(ASPECT_RATIO_DIMENSIONS.keys())}"
+            )
+        width, height = ASPECT_RATIO_DIMENSIONS[aspect_ratio]
 
     # Normalize clothing input
     clothing_items = _normalize_clothing_input(clothes)
