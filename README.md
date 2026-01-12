@@ -248,6 +248,12 @@ These assets are synthetic/AI-generated and do not depict real individuals. They
 
 ---
 
+## Contact
+
+This is free and open source project. If you need to build something custom in your company reach out to creators: https://www.linkedin.com/in/drozdmatt/ and https://www.linkedin.com/in/widlarz/. 
+
+---
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
