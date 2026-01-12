@@ -44,3 +44,7 @@ Thumbs.db
 # Video files
 *.mp4
 *.mov
+
+# Local only Jupyter notebooks
+*local.ipynb
+*local_assets*

@@ -4,12 +4,12 @@
     "description": "Generate animated video loop from static try-on image",
     "presets": {
         "360_v1": {
-            "base_prompt": "Smooth slow rotation animation of {subject}, subtle 360 degree turn, fashion video showcase",
+            "base_prompt": "Model does a fast fashionable 360 degree turn, counter-clockwise, and ends in the same pose as they started.",
             "motion": {
                 "type": "rotation",
-                "speed": "slow and graceful, approximately 45 degrees over duration",
+                "speed": "fast and graceful, 360 degrees, counter-clockwise, slower at the end",
                 "smoothness": "fluid continuous motion, no jerky movements",
-                "loop_friendly": "end pose similar to start for seamless looping"
+                "loop_friendly": "end pose is identical to start pose"
             },
             "style": {
                 "lighting": "consistent lighting throughout rotation",
@@ -19,7 +19,8 @@
             "preservation": {
                 "identity": "maintain exact appearance throughout",
                 "clothing": "garments move naturally with body rotation",
-                "expression": "neutral pleasant expression, minimal facial movement"
+                "expression": "neutral pleasant expression, minimal facial movement",
+                "camera": "fixed static camera, no panning or zooming"
             }
         },
         "idle_v1": {

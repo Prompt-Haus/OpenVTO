@@ -213,6 +213,7 @@ class OpenVTO:
         prompt: str | None = None,
         compose: bool = True,
         seed: int | None = None,
+        aspect_ratio: str | None = None,
         return_type: None = None,
     ) -> TryOnResult: ...
 
@@ -225,6 +226,7 @@ class OpenVTO:
         prompt: str | None = None,
         compose: bool = True,
         seed: int | None = None,
+        aspect_ratio: str | None = None,
         return_type: Literal["result"],
     ) -> TryOnResult: ...
 
@@ -237,6 +239,7 @@ class OpenVTO:
         prompt: str | None = None,
         compose: bool = True,
         seed: int | None = None,
+        aspect_ratio: str | None = None,
         return_type: Literal["pil"],
     ) -> PILImage: ...
 
@@ -249,6 +252,7 @@ class OpenVTO:
         prompt: str | None = None,
         compose: bool = True,
         seed: int | None = None,
+        aspect_ratio: str | None = None,
         return_type: Literal["bytes"],
     ) -> bytes: ...
 
@@ -260,6 +264,7 @@ class OpenVTO:
         prompt: str | None = None,
         compose: bool = True,
         seed: int | None = None,
+        aspect_ratio: str | None = None,
         return_type: TryOnReturnType | None = None,
     ) -> TryOnResult | PILImage | bytes:
         """Generate virtual try-on with clothing on avatar.
@@ -270,6 +275,8 @@ class OpenVTO:
             prompt: Optional custom prompt override.
             compose: Whether to composite clothing images first.
             seed: Random seed for reproducibility.
+            aspect_ratio: Output aspect ratio (e.g., "9:16", "16:9", "1:1", "4:3", "3:4").
+                If None, uses avatar dimensions or defaults to "9:16".
             return_type: How to return the result:
                 - None or "result" (default): Return full TryOnResult object
                 - "pil": Return as PIL Image
@@ -286,6 +293,7 @@ class OpenVTO:
             prompt_override=prompt,
             compose=compose,
             seed=seed,
+            aspect_ratio=aspect_ratio,
         )
 
         # Handle return type conversion
