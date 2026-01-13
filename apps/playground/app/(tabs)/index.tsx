@@ -1,46 +1,44 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import * as FileSystem from 'expo-file-system/legacy';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
   Image,
+  Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Alert,
-  ScrollView,
-  Modal
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Video from 'react-native-video';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withSpring,
-  withRepeat,
-  withTiming,
-  withSequence,
-  Easing,
-  interpolate
-} from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import * as FileSystem from 'expo-file-system/legacy';
-import { 
-  configureAPI, 
-  getClothingCategories, 
-  getClothingItems, 
-  getClothingImageUrl,
-  getAvatarImageUrl,
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import Video from 'react-native-video';
+import { useImagePicker } from '../../src/hooks/useImagePicker';
+import {
+  base64ToDataUri,
+  configureAPI,
   generateAvatar,
   generateTryOn,
   generateVideoLoop,
+  getAvatarImageUrl,
+  getClothingCategories,
+  getClothingImageUrl,
+  getClothingItems,
   imageUriToBase64,
-  base64ToDataUri
 } from '../../src/services/api';
-import { usePlaygroundStore, type HistoryItem } from '../../src/store/playground';
-import { useImagePicker } from '../../src/hooks/useImagePicker';
+import { usePlaygroundStore } from '../../src/store/playground';
 import type { ClothingCategory } from '../../src/types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -106,11 +104,11 @@ const GeneratingAnimation = ({ mode }: { mode: 'image' | 'video' }) => {
 
     // Step progression
     const stepInterval = setInterval(() => {
-      setCurrentStep(prev => (prev + 1) % GENERATION_STEPS.length);
+      setCurrentStep((prev) => (prev + 1) % GENERATION_STEPS.length);
     }, 2000);
 
     return () => clearInterval(stepInterval);
-  }, []);
+  }, [rotation, pulse]);
 
   const animatedPulse = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],
@@ -126,14 +124,10 @@ const GeneratingAnimation = ({ mode }: { mode: 'image' | 'video' }) => {
       <Animated.View style={[loadingStyles.spinnerRing, animatedRotation]}>
         <View style={loadingStyles.spinnerDot} />
       </Animated.View>
-      
+
       {/* Center icon */}
       <Animated.View style={[loadingStyles.centerBox, animatedPulse]}>
-        <Ionicons 
-          name={mode === 'video' ? 'videocam' : 'sparkles'} 
-          size={28} 
-          color="#000" 
-        />
+        <Ionicons name={mode === 'video' ? 'videocam' : 'sparkles'} size={28} color="#000" />
       </Animated.View>
 
       {/* Step indicator */}
@@ -141,12 +135,9 @@ const GeneratingAnimation = ({ mode }: { mode: 'image' | 'video' }) => {
         <Text style={loadingStyles.stepText}>{GENERATION_STEPS[currentStep].text}</Text>
         <View style={loadingStyles.dotsRow}>
           {GENERATION_STEPS.map((_, i) => (
-            <View 
-              key={i} 
-              style={[
-                loadingStyles.dot, 
-                i === currentStep && loadingStyles.dotActive
-              ]} 
+            <View
+              key={i}
+              style={[loadingStyles.dot, i === currentStep && loadingStyles.dotActive]}
             />
           ))}
         </View>
@@ -154,14 +145,12 @@ const GeneratingAnimation = ({ mode }: { mode: 'image' | 'video' }) => {
 
       {/* Mode badge */}
       <View style={loadingStyles.modeBadge}>
-        <Ionicons 
-          name={mode === 'video' ? 'videocam-outline' : 'image-outline'} 
-          size={14} 
-          color="#666" 
+        <Ionicons
+          name={mode === 'video' ? 'videocam-outline' : 'image-outline'}
+          size={14}
+          color="#666"
         />
-        <Text style={loadingStyles.modeText}>
-          {mode === 'video' ? 'Video' : 'Photo'}
-        </Text>
+        <Text style={loadingStyles.modeText}>{mode === 'video' ? 'Video' : 'Photo'}</Text>
       </View>
     </View>
   );
@@ -250,14 +239,14 @@ const loadingStyles = StyleSheet.create({
 });
 
 // Helper component for clothing item
-const ClothingItemView = ({ 
-  item, 
-  isSelected, 
+const ClothingItemView = ({
+  item,
+  isSelected,
   onPress,
-  onLongPress
-}: { 
-  item: DisplayItem; 
-  isSelected: boolean; 
+  onLongPress,
+}: {
+  item: DisplayItem;
+  isSelected: boolean;
   onPress: () => void;
   onLongPress: () => void;
 }) => {
@@ -270,12 +259,17 @@ const ClothingItemView = ({
       onLongPress={onLongPress}
       delayLongPress={300}
     >
-      <Image 
-        source={{ uri: item.image }} 
-        style={styles.clothesImage} 
-      />
-      {isSelected && <View style={styles.check}><Ionicons name="checkmark" size={14} color="#fff" /></View>}
-      {item.isLocal && <View style={styles.localBadge}><Ionicons name="person" size={8} color="#fff" /></View>}
+      <Image source={{ uri: item.image }} style={styles.clothesImage} />
+      {isSelected && (
+        <View style={styles.check}>
+          <Ionicons name="checkmark" size={14} color="#fff" />
+        </View>
+      )}
+      {item.isLocal && (
+        <View style={styles.localBadge}>
+          <Ionicons name="person" size={8} color="#fff" />
+        </View>
+      )}
       {hasBack && (
         <View style={styles.flipBadge}>
           <Ionicons name="repeat" size={10} color="#fff" />
@@ -286,45 +280,49 @@ const ClothingItemView = ({
 };
 
 export default function TryOnScreen() {
-  const insets = useSafeAreaInsets();
-  
   // Selection State (single selection per category)
   const [selectedShirt, setSelectedShirt] = useState<string | null>(null);
   const [selectedTrousers, setSelectedTrousers] = useState<string | null>(null);
   const [selectedJacket, setSelectedJacket] = useState<string | null>(null);
   const [selectedAvatarId, setSelectedAvatarId] = useState<string>('default-1');
-  
+
   // Avatar State
   const [avatars, setAvatars] = useState<AvatarItem[]>([DEFAULT_AVATAR]);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [avatarSelfie, setAvatarSelfie] = useState<string | null>(null);
   const [avatarPosture, setAvatarPosture] = useState<string | null>(null);
   const [isCreatingAvatar, setIsCreatingAvatar] = useState(false);
-  
+
   // Preview Modal State
   const [previewItem, setPreviewItem] = useState<DisplayItem | null>(null);
   const [previewShowBack, setPreviewShowBack] = useState(false);
-  
+
   // Generation State
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationMode, setGenerationMode] = useState<'image' | 'video'>('image');
   const [resultUri, setResultUri] = useState<string | null>(null);
   const [resultType, setResultType] = useState<'image' | 'video'>('image');
   const [isConvertingToVideo, setIsConvertingToVideo] = useState(false);
-  
+
   // Data State
   const [shirts, setShirts] = useState<DisplayItem[]>([]);
   const [trousers, setTrousers] = useState<DisplayItem[]>([]);
   const [jackets, setJackets] = useState<DisplayItem[]>([]);
   const [isLoadingClothes, setIsLoadingClothes] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  
+  const [, setLoadError] = useState<string | null>(null);
+
   // Animation
   const translateY = useSharedValue(SNAP_TOP);
 
   // Local clothing hook
   const { pickImage } = useImagePicker();
-  const { addClothingItem, removeClothingItem, clothingItems: storedClothingItems, generationHistory, addToHistory } = usePlaygroundStore();
+  const {
+    addClothingItem,
+    removeClothingItem,
+    clothingItems: storedClothingItems,
+    generationHistory,
+    addToHistory,
+  } = usePlaygroundStore();
 
   // Load initial data
   useEffect(() => {
@@ -335,9 +333,9 @@ export default function TryOnScreen() {
   // Load stored local clothing items
   useEffect(() => {
     if (storedClothingItems && storedClothingItems.length > 0) {
-      const localItems = storedClothingItems.filter(item => item.isLocal);
-      
-      localItems.forEach(item => {
+      const localItems = storedClothingItems.filter((item) => item.isLocal);
+
+      localItems.forEach((item) => {
         const displayItem: DisplayItem = {
           id: item.id,
           image: item.frontImageUri,
@@ -345,20 +343,20 @@ export default function TryOnScreen() {
           category: item.category,
           isLocal: true,
         };
-        
+
         if (item.category === 'shirts') {
-          setShirts(prev => {
-            if (prev.some(i => i.id === item.id)) return prev;
+          setShirts((prev) => {
+            if (prev.some((i) => i.id === item.id)) return prev;
             return [displayItem, ...prev];
           });
         } else if (item.category === 'pants') {
-          setTrousers(prev => {
-            if (prev.some(i => i.id === item.id)) return prev;
+          setTrousers((prev) => {
+            if (prev.some((i) => i.id === item.id)) return prev;
             return [displayItem, ...prev];
           });
         } else if (item.category === 'jackets') {
-          setJackets(prev => {
-            if (prev.some(i => i.id === item.id)) return prev;
+          setJackets((prev) => {
+            if (prev.some((i) => i.id === item.id)) return prev;
             return [displayItem, ...prev];
           });
         }
@@ -373,18 +371,21 @@ export default function TryOnScreen() {
       const categories = await getClothingCategories();
       for (const category of categories) {
         const itemsData = await getClothingItems(category);
-        const items: DisplayItem[] = itemsData.indices.map(index => ({
+        const items: DisplayItem[] = itemsData.indices.map((index) => ({
           id: `${category}-${index}`,
           image: getClothingImageUrl(category, index, 'front'),
-          backImage: itemsData.views.includes('back') 
-            ? getClothingImageUrl(category, index, 'back') 
+          backImage: itemsData.views.includes('back')
+            ? getClothingImageUrl(category, index, 'back')
             : undefined,
           category,
         }));
-        
-        if (category === 'shirts') setShirts(prev => [...prev.filter(i => i.isLocal), ...items]);
-        else if (category === 'pants') setTrousers(prev => [...prev.filter(i => i.isLocal), ...items]);
-        else if (category === 'jackets') setJackets(prev => [...prev.filter(i => i.isLocal), ...items]);
+
+        if (category === 'shirts')
+          setShirts((prev) => [...prev.filter((i) => i.isLocal), ...items]);
+        else if (category === 'pants')
+          setTrousers((prev) => [...prev.filter((i) => i.isLocal), ...items]);
+        else if (category === 'jackets')
+          setJackets((prev) => [...prev.filter((i) => i.isLocal), ...items]);
       }
     } catch (error) {
       console.error('Failed to load clothing:', error);
@@ -398,7 +399,7 @@ export default function TryOnScreen() {
     Alert.alert('Add Item', 'Choose source', [
       { text: 'Camera', onPress: () => pickAndAddItem(category, 'camera') },
       { text: 'Gallery', onPress: () => pickAndAddItem(category, 'library') },
-      { text: 'Cancel', style: 'cancel' }
+      { text: 'Cancel', style: 'cancel' },
     ]);
   };
 
@@ -408,31 +409,27 @@ export default function TryOnScreen() {
     if (!frontResult || frontResult.cancelled) return;
 
     // 2. Ask for Back Image
-    Alert.alert(
-      'Add Back View?',
-      'Do you want to add a back view image for this item?',
-      [
-        { 
-          text: 'No, skip', 
-          onPress: () => saveItem(category, frontResult.uri) 
+    Alert.alert('Add Back View?', 'Do you want to add a back view image for this item?', [
+      {
+        text: 'No, skip',
+        onPress: () => saveItem(category, frontResult.uri),
+      },
+      {
+        text: 'Yes, add back',
+        onPress: async () => {
+          // Slight delay to allow modal to close
+          setTimeout(async () => {
+            const backResult = await pickImage(source);
+            if (backResult && !backResult.cancelled) {
+              saveItem(category, frontResult.uri, backResult.uri);
+            } else {
+              // If cancelled back image, just save front
+              saveItem(category, frontResult.uri);
+            }
+          }, 500);
         },
-        { 
-          text: 'Yes, add back', 
-          onPress: async () => {
-            // Slight delay to allow modal to close
-            setTimeout(async () => {
-              const backResult = await pickImage(source);
-              if (backResult && !backResult.cancelled) {
-                saveItem(category, frontResult.uri, backResult.uri);
-              } else {
-                // If cancelled back image, just save front
-                saveItem(category, frontResult.uri);
-              }
-            }, 500);
-          } 
-        }
-      ]
-    );
+      },
+    ]);
   };
 
   const saveItem = (category: string, frontUri: string, backUri?: string) => {
@@ -443,7 +440,7 @@ export default function TryOnScreen() {
       category,
       isLocal: true,
     };
-    
+
     addClothingItem({
       name: `My ${category}`,
       category: category as ClothingCategory,
@@ -453,50 +450,47 @@ export default function TryOnScreen() {
     });
 
     if (category === 'shirts') {
-      setShirts(prev => [newItem, ...prev]);
+      setShirts((prev) => [newItem, ...prev]);
       setSelectedShirt(newItem.id);
     } else if (category === 'pants') {
-      setTrousers(prev => [newItem, ...prev]);
+      setTrousers((prev) => [newItem, ...prev]);
       setSelectedTrousers(newItem.id);
     } else if (category === 'jackets') {
-      setJackets(prev => [newItem, ...prev]);
+      setJackets((prev) => [newItem, ...prev]);
       setSelectedJacket(newItem.id);
     }
   };
 
-  const canGenerate = selectedShirt !== null || selectedTrousers !== null || selectedJacket !== null;
+  const canGenerate =
+    selectedShirt !== null || selectedTrousers !== null || selectedJacket !== null;
 
   const handleDeleteLocalItem = (item: DisplayItem) => {
-    Alert.alert(
-      'Delete Item',
-      'Are you sure you want to delete this item?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            // Remove from store (AsyncStorage) - this persists the deletion
-            removeClothingItem(item.id);
-            
-            // Remove from local display list
-            if (item.category === 'shirts') {
-              setShirts(prev => prev.filter(i => i.id !== item.id));
-              if (selectedShirt === item.id) setSelectedShirt(null);
-            } else if (item.category === 'pants') {
-              setTrousers(prev => prev.filter(i => i.id !== item.id));
-              if (selectedTrousers === item.id) setSelectedTrousers(null);
-            } else if (item.category === 'jackets') {
-              setJackets(prev => prev.filter(i => i.id !== item.id));
-              if (selectedJacket === item.id) setSelectedJacket(null);
-            }
-            // Close preview modal
-            setPreviewItem(null);
-            setPreviewShowBack(false);
+    Alert.alert('Delete Item', 'Are you sure you want to delete this item?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          // Remove from store (AsyncStorage) - this persists the deletion
+          removeClothingItem(item.id);
+
+          // Remove from local display list
+          if (item.category === 'shirts') {
+            setShirts((prev) => prev.filter((i) => i.id !== item.id));
+            if (selectedShirt === item.id) setSelectedShirt(null);
+          } else if (item.category === 'pants') {
+            setTrousers((prev) => prev.filter((i) => i.id !== item.id));
+            if (selectedTrousers === item.id) setSelectedTrousers(null);
+          } else if (item.category === 'jackets') {
+            setJackets((prev) => prev.filter((i) => i.id !== item.id));
+            if (selectedJacket === item.id) setSelectedJacket(null);
           }
-        }
-      ]
-    );
+          // Close preview modal
+          setPreviewItem(null);
+          setPreviewShowBack(false);
+        },
+      },
+    ]);
   };
 
   // Avatar creation functions
@@ -508,27 +502,27 @@ export default function TryOnScreen() {
 
   const handlePickAvatarImage = async (type: 'selfie' | 'posture') => {
     Alert.alert('Choose Source', '', [
-      { 
-        text: 'Camera', 
+      {
+        text: 'Camera',
         onPress: async () => {
           const result = await pickImage('camera');
           if (result && !result.cancelled) {
             if (type === 'selfie') setAvatarSelfie(result.uri);
             else setAvatarPosture(result.uri);
           }
-        }
+        },
       },
-      { 
-        text: 'Gallery', 
+      {
+        text: 'Gallery',
         onPress: async () => {
           const result = await pickImage('library');
           if (result && !result.cancelled) {
             if (type === 'selfie') setAvatarSelfie(result.uri);
             else setAvatarPosture(result.uri);
           }
-        }
+        },
       },
-      { text: 'Cancel', style: 'cancel' }
+      { text: 'Cancel', style: 'cancel' },
     ]);
   };
 
@@ -555,12 +549,12 @@ export default function TryOnScreen() {
         image: base64ToDataUri(result.image_b64, 'image/png'),
       };
 
-      setAvatars(prev => [...prev, newAvatar]);
+      setAvatars((prev) => [...prev, newAvatar]);
       setSelectedAvatarId(newAvatar.id);
       setShowAvatarModal(false);
       setAvatarSelfie(null);
       setAvatarPosture(null);
-      
+
       Alert.alert('Success', 'Avatar created successfully!');
     } catch (error) {
       console.error('Avatar creation failed:', error);
@@ -571,7 +565,7 @@ export default function TryOnScreen() {
   };
 
   const handleDeleteAvatar = (avatarId: string) => {
-    const avatar = avatars.find(a => a.id === avatarId);
+    const avatar = avatars.find((a) => a.id === avatarId);
     if (avatar?.isDefault) {
       Alert.alert('Cannot Delete', 'Default avatar cannot be deleted.');
       return;
@@ -583,24 +577,24 @@ export default function TryOnScreen() {
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          setAvatars(prev => prev.filter(a => a.id !== avatarId));
+          setAvatars((prev) => prev.filter((a) => a.id !== avatarId));
           if (selectedAvatarId === avatarId) {
             setSelectedAvatarId('default-1');
           }
-        }
-      }
+        },
+      },
     ]);
   };
 
   const handleGenerate = async () => {
     if (!canGenerate || isGenerating) return;
-    
+
     setIsGenerating(true);
     translateY.value = withSpring(SNAP_BOTTOM); // Collapse sheet during generation
-    
+
     try {
       // 1. Get Avatar Image
-      const selectedAvatar = avatars.find(a => a.id === selectedAvatarId);
+      const selectedAvatar = avatars.find((a) => a.id === selectedAvatarId);
       if (!selectedAvatar) {
         throw new Error('No avatar selected');
       }
@@ -610,14 +604,16 @@ export default function TryOnScreen() {
 
       // 2. Get Clothing Images
       const selectedItems = [
-        shirts.find(i => i.id === selectedShirt),
-        trousers.find(i => i.id === selectedTrousers),
-        jackets.find(i => i.id === selectedJacket),
+        shirts.find((i) => i.id === selectedShirt),
+        trousers.find((i) => i.id === selectedTrousers),
+        jackets.find((i) => i.id === selectedJacket),
       ].filter((item): item is DisplayItem => item !== undefined);
-      
+
       console.log('[Generate] Selected items:', selectedItems.length);
-      selectedItems.forEach((item, i) => console.log(`[Generate] Item ${i}: ${item.image.substring(0, 50)}...`));
-      
+      selectedItems.forEach((item, i) =>
+        console.log(`[Generate] Item ${i}: ${item.image.substring(0, 50)}...`)
+      );
+
       const clothesB64 = await Promise.all(
         selectedItems.map(async (item, index) => {
           console.log(`[Generate] Converting cloth ${index}...`);
@@ -628,7 +624,7 @@ export default function TryOnScreen() {
       );
 
       console.log('[Generate] All clothes converted, calling API...');
-      
+
       // 3. Generate Try-On
       const tryOnResult = await generateTryOn({
         avatar_b64: avatarB64,
@@ -645,33 +641,33 @@ export default function TryOnScreen() {
           image_b64: tryOnResult.image_b64,
           mode: '360',
         });
-        
+
         // Save first frame as thumbnail
         if (videoResult.first_frame_b64) {
           videoThumbnail = base64ToDataUri(videoResult.first_frame_b64, 'image/png');
         }
-        
+
         // Save video to temp file (react-native-video needs file:// URI)
         const videoFileName = `vto_video_${Date.now()}.mp4`;
         const videoFilePath = `${FileSystem.cacheDirectory}${videoFileName}`;
-        
+
         // Remove data URI prefix if present
-        const base64Data = videoResult.video_b64.includes(',') 
-          ? videoResult.video_b64.split(',')[1] 
+        const base64Data = videoResult.video_b64.includes(',')
+          ? videoResult.video_b64.split(',')[1]
           : videoResult.video_b64;
-          
+
         await FileSystem.writeAsStringAsync(videoFilePath, base64Data, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        
+
         // Verify file exists
         const fileInfo = await FileSystem.getInfoAsync(videoFilePath);
-        console.log('[Video] Saved to:', videoFilePath, 'exists:', fileInfo.exists, 'size:', fileInfo.size);
-        
-        if (!fileInfo.exists || fileInfo.size === 0) {
+        console.log('[Video] Saved to:', videoFilePath, 'exists:', fileInfo.exists);
+
+        if (!fileInfo.exists) {
           throw new Error('Video file was not saved correctly');
         }
-        
+
         finalUri = videoFilePath;
         finalType = 'video';
       }
@@ -679,7 +675,7 @@ export default function TryOnScreen() {
       // 5. Update State
       setResultUri(finalUri);
       setResultType(finalType);
-      
+
       // Add to persisted history
       addToHistory({
         type: finalType,
@@ -689,7 +685,6 @@ export default function TryOnScreen() {
 
       // Collapse sheet to show result
       translateY.value = withSpring(SNAP_BOTTOM);
-
     } catch (error) {
       console.error('Generation failed:', error);
       Alert.alert('Error', 'Failed to generate result. Please try again.');
@@ -786,17 +781,15 @@ export default function TryOnScreen() {
   }));
 
   const toggleSheet = () => {
-    translateY.value = withSpring(translateY.value > (SNAP_TOP + SNAP_BOTTOM) / 2 ? SNAP_TOP : SNAP_BOTTOM);
+    translateY.value = withSpring(
+      translateY.value > (SNAP_TOP + SNAP_BOTTOM) / 2 ? SNAP_TOP : SNAP_BOTTOM
+    );
   };
 
   return (
     <View style={styles.container}>
       {/* Result Display */}
-      <TouchableOpacity 
-        style={styles.resultContainer} 
-        activeOpacity={1} 
-        onPress={toggleSheet}
-      >
+      <TouchableOpacity style={styles.resultContainer} activeOpacity={1} onPress={toggleSheet}>
         {isGenerating ? (
           <GeneratingAnimation mode={generationMode} />
         ) : isConvertingToVideo ? (
@@ -804,11 +797,7 @@ export default function TryOnScreen() {
         ) : resultUri ? (
           resultType === 'video' ? (
             <Video
-              source={
-                resultUri === 'LOCAL_MOCK_VIDEO' 
-                  ? require('../../assets/_mocks_/result.mov')
-                  : { uri: resultUri }
-              }
+              source={{ uri: resultUri }}
               style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
               resizeMode="cover"
               repeat={true}
@@ -820,25 +809,27 @@ export default function TryOnScreen() {
               onLoad={() => console.log('[Video] Loaded successfully')}
             />
           ) : (
-            <Image 
-              source={{ uri: resultUri }} 
-              style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }} 
-              resizeMode="cover" 
+            <Image
+              source={{ uri: resultUri }}
+              style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+              resizeMode="cover"
             />
           )
         ) : (
-          <Image 
-            source={{ uri: avatars.find(a => a.id === selectedAvatarId)?.image || DEFAULT_AVATAR.image }} 
-            style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }} 
-            resizeMode="cover" 
+          <Image
+            source={{
+              uri: avatars.find((a) => a.id === selectedAvatarId)?.image || DEFAULT_AVATAR.image,
+            }}
+            style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+            resizeMode="cover"
           />
         )}
       </TouchableOpacity>
 
       {/* Create Video FAB - Shows when viewing image result */}
       {resultUri && resultType === 'image' && !isGenerating && !isConvertingToVideo && (
-        <TouchableOpacity 
-          style={styles.createVideoFab} 
+        <TouchableOpacity
+          style={styles.createVideoFab}
           onPress={handleCreateVideoFromResult}
           activeOpacity={0.8}
         >
@@ -847,29 +838,37 @@ export default function TryOnScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Bottom Sheet */}
-      <Animated.View style={[styles.bottomSheet, animatedStyle]}>
-        <GestureDetector gesture={panGesture}>
-          <Animated.View>
-            <TouchableOpacity style={styles.handleContainer} activeOpacity={0.8} onPress={toggleSheet}>
-              <View style={styles.handle} />
-            </TouchableOpacity>
-          </Animated.View>
-        </GestureDetector>
-        
-        <ScrollView
-          style={styles.bottomSheetContent}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-        >
+      {/* Bottom Sheet - hidden during generation */}
+      {!isGenerating && !isConvertingToVideo && (
+        <Animated.View style={[styles.bottomSheet, animatedStyle]}>
+          <GestureDetector gesture={panGesture}>
+            <Animated.View>
+              <TouchableOpacity
+                style={styles.handleContainer}
+                activeOpacity={0.8}
+                onPress={toggleSheet}
+              >
+                <View style={styles.handle} />
+              </TouchableOpacity>
+            </Animated.View>
+          </GestureDetector>
+
+          <ScrollView
+            style={styles.bottomSheetContent}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+          >
             {/* History Section */}
             <Text style={styles.title}>History</Text>
             <View style={styles.galleryRow}>
               {/* New Generation Button (Active State) */}
               <TouchableOpacity
                 style={[styles.galleryItem, !resultUri && styles.galleryItemActive]}
-                onPress={() => { setResultUri(null); translateY.value = withSpring(SNAP_TOP); }}
+                onPress={() => {
+                  setResultUri(null);
+                  translateY.value = withSpring(SNAP_TOP);
+                }}
               >
                 <View style={styles.newGenIcon}>
                   <Ionicons name="add" size={32} color="#000" />
@@ -877,13 +876,13 @@ export default function TryOnScreen() {
                 <Text style={styles.newGenText}>New</Text>
               </TouchableOpacity>
 
-              {generationHistory.map(item => (
+              {generationHistory.map((item) => (
                 <TouchableOpacity
                   key={item.id}
                   style={[styles.galleryItem, resultUri === item.uri && styles.galleryItemActive]}
-                  onPress={async () => { 
+                  onPress={async () => {
                     let uri = item.uri;
-                    
+
                     // If it's a video with data URI, convert to file first
                     if (item.type === 'video' && uri.startsWith('data:')) {
                       const base64Data = uri.split(',')[1];
@@ -893,15 +892,19 @@ export default function TryOnScreen() {
                       });
                       uri = videoFilePath;
                     }
-                    
-                    setResultUri(uri); 
-                    setResultType(item.type); 
+
+                    setResultUri(uri);
+                    setResultType(item.type);
                   }}
                 >
                   {item.type === 'video' ? (
                     item.thumbnail ? (
                       <>
-                        <Image source={{ uri: item.thumbnail }} style={styles.galleryImage} resizeMode="cover" />
+                        <Image
+                          source={{ uri: item.thumbnail }}
+                          style={styles.galleryImage}
+                          resizeMode="cover"
+                        />
                         <View style={styles.playOverlay}>
                           <Ionicons name="play-circle" size={24} color="#fff" />
                         </View>
@@ -913,7 +916,11 @@ export default function TryOnScreen() {
                       </View>
                     )
                   ) : (
-                    <Image source={{ uri: item.uri }} style={styles.galleryImage} resizeMode="cover" />
+                    <Image
+                      source={{ uri: item.uri }}
+                      style={styles.galleryImage}
+                      resizeMode="cover"
+                    />
                   )}
                 </TouchableOpacity>
               ))}
@@ -926,12 +933,19 @@ export default function TryOnScreen() {
                 <Ionicons name="add-circle-outline" size={24} color="#000" />
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.avatarScrollView}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.avatarScrollView}
+            >
               <View style={styles.avatarRow}>
-                {avatars.map(avatar => (
+                {avatars.map((avatar) => (
                   <TouchableOpacity
                     key={avatar.id}
-                    style={[styles.avatarItem, selectedAvatarId === avatar.id && styles.avatarActive]}
+                    style={[
+                      styles.avatarItem,
+                      selectedAvatarId === avatar.id && styles.avatarActive,
+                    ]}
                     onPress={() => setSelectedAvatarId(avatar.id)}
                     onLongPress={() => !avatar.isDefault && handleDeleteAvatar(avatar.id)}
                     delayLongPress={300}
@@ -967,14 +981,16 @@ export default function TryOnScreen() {
                   data={shirts}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  keyExtractor={item => item.id}
+                  keyExtractor={(item) => item.id}
                   style={styles.clothesList}
                   contentContainerStyle={styles.clothesScrollContent}
                   renderItem={({ item }) => (
                     <ClothingItemView
                       item={item}
                       isSelected={selectedShirt === item.id}
-                      onPress={() => setSelectedShirt(prev => prev === item.id ? null : item.id)}
+                      onPress={() =>
+                        setSelectedShirt((prev) => (prev === item.id ? null : item.id))
+                      }
                       onLongPress={() => setPreviewItem(item)}
                     />
                   )}
@@ -990,19 +1006,21 @@ export default function TryOnScreen() {
                   data={trousers}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  keyExtractor={item => item.id}
+                  keyExtractor={(item) => item.id}
                   style={styles.clothesList}
                   contentContainerStyle={styles.clothesScrollContent}
                   renderItem={({ item }) => (
                     <ClothingItemView
                       item={item}
                       isSelected={selectedTrousers === item.id}
-                      onPress={() => setSelectedTrousers(prev => prev === item.id ? null : item.id)}
+                      onPress={() =>
+                        setSelectedTrousers((prev) => (prev === item.id ? null : item.id))
+                      }
                       onLongPress={() => setPreviewItem(item)}
                     />
                   )}
                 />
-                
+
                 <View style={styles.sectionHeader}>
                   <Text style={styles.label}>Jackets</Text>
                   <TouchableOpacity onPress={() => handleAddLocalItem('jackets')}>
@@ -1013,14 +1031,16 @@ export default function TryOnScreen() {
                   data={jackets}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  keyExtractor={item => item.id}
+                  keyExtractor={(item) => item.id}
                   style={styles.clothesList}
                   contentContainerStyle={styles.clothesScrollContent}
                   renderItem={({ item }) => (
                     <ClothingItemView
                       item={item}
                       isSelected={selectedJacket === item.id}
-                      onPress={() => setSelectedJacket(prev => prev === item.id ? null : item.id)}
+                      onPress={() =>
+                        setSelectedJacket((prev) => (prev === item.id ? null : item.id))
+                      }
                       onLongPress={() => setPreviewItem(item)}
                     />
                   )}
@@ -1031,19 +1051,35 @@ export default function TryOnScreen() {
             {/* Generation Controls */}
             <View style={styles.controls}>
               <View style={styles.modeSwitch}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.modeBtn, generationMode === 'image' && styles.modeBtnActive]}
                   onPress={() => setGenerationMode('image')}
                 >
-                  <Ionicons name="image-outline" size={20} color={generationMode === 'image' ? '#fff' : '#000'} />
-                  <Text style={[styles.modeText, generationMode === 'image' && styles.modeTextActive]}>Photo</Text>
+                  <Ionicons
+                    name="image-outline"
+                    size={20}
+                    color={generationMode === 'image' ? '#fff' : '#000'}
+                  />
+                  <Text
+                    style={[styles.modeText, generationMode === 'image' && styles.modeTextActive]}
+                  >
+                    Photo
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.modeBtn, generationMode === 'video' && styles.modeBtnActive]}
                   onPress={() => setGenerationMode('video')}
                 >
-                  <Ionicons name="videocam-outline" size={20} color={generationMode === 'video' ? '#fff' : '#000'} />
-                  <Text style={[styles.modeText, generationMode === 'video' && styles.modeTextActive]}>Video</Text>
+                  <Ionicons
+                    name="videocam-outline"
+                    size={20}
+                    color={generationMode === 'video' ? '#fff' : '#000'}
+                  />
+                  <Text
+                    style={[styles.modeText, generationMode === 'video' && styles.modeTextActive]}
+                  >
+                    Video
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -1053,13 +1089,18 @@ export default function TryOnScreen() {
                 disabled={!canGenerate || isGenerating}
               >
                 <Ionicons name="sparkles" size={18} color={canGenerate ? '#fff' : '#bbb'} />
-                <Text style={[styles.btnText, (!canGenerate || isGenerating) && styles.btnTextDisabled]}>
-                  {isGenerating ? 'Generating...' : `Generate ${generationMode === 'video' ? 'Video' : 'Photo'}`}
+                <Text
+                  style={[styles.btnText, (!canGenerate || isGenerating) && styles.btnTextDisabled]}
+                >
+                  {isGenerating
+                    ? 'Generating...'
+                    : `Generate ${generationMode === 'video' ? 'Video' : 'Photo'}`}
                 </Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
         </Animated.View>
+      )}
 
       {/* Clothing Preview Modal */}
       <Modal
@@ -1071,19 +1112,23 @@ export default function TryOnScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             {/* Close Button */}
-            <TouchableOpacity 
-              style={styles.modalClose} 
-              onPress={() => { setPreviewItem(null); setPreviewShowBack(false); }}
+            <TouchableOpacity
+              style={styles.modalClose}
+              onPress={() => {
+                setPreviewItem(null);
+                setPreviewShowBack(false);
+              }}
             >
               <Ionicons name="close" size={28} color="#000" />
             </TouchableOpacity>
 
             {/* Image */}
             <Image
-              source={{ 
-                uri: previewShowBack && previewItem?.backImage 
-                  ? previewItem.backImage 
-                  : previewItem?.image 
+              source={{
+                uri:
+                  previewShowBack && previewItem?.backImage
+                    ? previewItem.backImage
+                    : previewItem?.image,
               }}
               style={styles.modalImage}
               resizeMode="contain"
@@ -1096,7 +1141,12 @@ export default function TryOnScreen() {
                   style={[styles.modalToggleBtn, !previewShowBack && styles.modalToggleBtnActive]}
                   onPress={() => setPreviewShowBack(false)}
                 >
-                  <Text style={[styles.modalToggleText, !previewShowBack && styles.modalToggleTextActive]}>
+                  <Text
+                    style={[
+                      styles.modalToggleText,
+                      !previewShowBack && styles.modalToggleTextActive,
+                    ]}
+                  >
                     Front
                   </Text>
                 </TouchableOpacity>
@@ -1104,7 +1154,12 @@ export default function TryOnScreen() {
                   style={[styles.modalToggleBtn, previewShowBack && styles.modalToggleBtnActive]}
                   onPress={() => setPreviewShowBack(true)}
                 >
-                  <Text style={[styles.modalToggleText, previewShowBack && styles.modalToggleTextActive]}>
+                  <Text
+                    style={[
+                      styles.modalToggleText,
+                      previewShowBack && styles.modalToggleTextActive,
+                    ]}
+                  >
                     Back
                   </Text>
                 </TouchableOpacity>
@@ -1116,9 +1171,7 @@ export default function TryOnScreen() {
               <Text style={styles.modalInfoText}>
                 {previewItem?.isLocal ? '📱 Local Item' : '☁️ From API'}
               </Text>
-              <Text style={styles.modalInfoCategory}>
-                {previewItem?.category}
-              </Text>
+              <Text style={styles.modalInfoCategory}>{previewItem?.category}</Text>
             </View>
 
             {/* Delete Button (only for local items) */}
@@ -1147,7 +1200,7 @@ export default function TryOnScreen() {
             {/* Header */}
             <View style={styles.avatarModalHeader}>
               <Text style={styles.avatarModalTitle}>Create Avatar</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => !isCreatingAvatar && setShowAvatarModal(false)}
                 disabled={isCreatingAvatar}
               >
@@ -1162,7 +1215,7 @@ export default function TryOnScreen() {
             {/* Image Pickers */}
             <View style={styles.avatarImagePickers}>
               {/* Selfie */}
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.avatarImagePicker}
                 onPress={() => handlePickAvatarImage('selfie')}
                 disabled={isCreatingAvatar}
@@ -1183,7 +1236,7 @@ export default function TryOnScreen() {
               </TouchableOpacity>
 
               {/* Posture */}
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.avatarImagePicker}
                 onPress={() => handlePickAvatarImage('posture')}
                 disabled={isCreatingAvatar}
@@ -1208,7 +1261,8 @@ export default function TryOnScreen() {
             <TouchableOpacity
               style={[
                 styles.avatarCreateBtn,
-                (!avatarSelfie || !avatarPosture || isCreatingAvatar) && styles.avatarCreateBtnDisabled
+                (!avatarSelfie || !avatarPosture || isCreatingAvatar) &&
+                  styles.avatarCreateBtnDisabled,
               ]}
               onPress={handleCreateAvatar}
               disabled={!avatarSelfie || !avatarPosture || isCreatingAvatar}
@@ -1239,19 +1293,26 @@ export default function TryOnScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   resultContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: '#111', zIndex: 0 },
-  videoContainer: { flex: 1, width: '100%', height: '100%', backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  videoContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   video: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },
   videoLoader: { position: 'absolute', zIndex: 1 },
-  videoBadge: { 
-    position: 'absolute', 
-    top: 60, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  videoBadge: {
+    position: 'absolute',
+    top: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.6)', 
-    paddingHorizontal: 12, 
-    paddingVertical: 6, 
-    borderRadius: 16 
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   videoBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   simulatorWarning: {
@@ -1267,28 +1328,56 @@ const styles = StyleSheet.create({
   },
   simulatorWarningText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   bottomSheet: {
-    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     backgroundColor: '#fff',
-    borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    shadowColor: '#000', shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5, zIndex: 10,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 10,
   },
   handleContainer: { width: '100%', height: 40, justifyContent: 'center', alignItems: 'center' },
   handle: { width: 40, height: 5, backgroundColor: '#e0e0e0', borderRadius: 3 },
   bottomSheetContent: { flex: 1 },
   scrollContent: { paddingBottom: SNAP_TOP + 50 },
-  title: { fontSize: 22, fontWeight: '700', color: '#000', marginBottom: 16, paddingHorizontal: PADDING },
-  galleryRow: { flexDirection: 'row', gap: GALLERY_GAP, marginBottom: 20, paddingHorizontal: PADDING },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 16,
+    paddingHorizontal: PADDING,
+  },
+  galleryRow: {
+    flexDirection: 'row',
+    gap: GALLERY_GAP,
+    marginBottom: 20,
+    paddingHorizontal: PADDING,
+  },
   galleryItem: {
-    width: GALLERY_SIZE, height: GALLERY_SIZE * 1.25, borderRadius: 12, overflow: 'hidden',
-    backgroundColor: '#f0f0f0', borderWidth: 2.5, borderColor: 'transparent',
-    justifyContent: 'center', alignItems: 'center',
+    width: GALLERY_SIZE,
+    height: GALLERY_SIZE * 1.25,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+    borderWidth: 2.5,
+    borderColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   galleryItemActive: { borderColor: '#000' },
   galleryImage: { width: '100%', height: '100%' },
   playOverlay: {
-    ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center', alignItems: 'center',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   videoThumbnail: {
     width: '100%',
@@ -1305,30 +1394,134 @@ const styles = StyleSheet.create({
   },
   newGenIcon: { marginBottom: 4 },
   newGenText: { fontSize: 12, fontWeight: '600', color: '#000' },
-  label: { fontSize: 12, fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12, marginBottom: 10, paddingHorizontal: PADDING },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 10, paddingHorizontal: PADDING },
+  label: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#999',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 12,
+    marginBottom: 10,
+    paddingHorizontal: PADDING,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 10,
+    paddingHorizontal: PADDING,
+  },
   clothesList: { flexGrow: 0, height: 80 },
   clothesScrollContent: { paddingHorizontal: PADDING, gap: 10 },
-  clothesItem: { width: 80, height: 80, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f0f0f0', borderWidth: 2.5, borderColor: 'transparent' },
+  clothesItem: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+    borderWidth: 2.5,
+    borderColor: 'transparent',
+  },
   clothesActive: { borderColor: '#000' },
   clothesImage: { width: '100%', height: '100%' },
-  check: { position: 'absolute', top: 5, right: 5, width: 20, height: 20, borderRadius: 10, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
-  localBadge: { position: 'absolute', bottom: 5, right: 5, width: 14, height: 14, borderRadius: 7, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center' },
-  flipBadge: { position: 'absolute', bottom: 5, left: 5, width: 14, height: 14, borderRadius: 7, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+  check: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  localBadge: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  flipBadge: {
+    position: 'absolute',
+    bottom: 5,
+    left: 5,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   avatarScrollView: { marginBottom: 8 },
   avatarRow: { flexDirection: 'row', paddingHorizontal: PADDING, gap: 10 },
-  avatarItem: { width: 70, height: 70, borderRadius: 35, overflow: 'hidden', borderWidth: 3, borderColor: 'transparent', backgroundColor: '#f0f0f0' },
+  avatarItem: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: 'transparent',
+    backgroundColor: '#f0f0f0',
+  },
   avatarActive: { borderColor: '#000' },
   avatarImage: { width: '100%', height: '100%' },
-  avatarCheck: { position: 'absolute', bottom: 2, right: 2, width: 18, height: 18, borderRadius: 9, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
-  defaultBadge: { position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: 8, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center' },
+  avatarCheck: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  defaultBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFD700',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   controls: { paddingHorizontal: PADDING, marginTop: 20 },
-  modeSwitch: { flexDirection: 'row', backgroundColor: '#f0f0f0', borderRadius: 12, padding: 4, marginBottom: 16 },
-  modeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 10, gap: 6 },
+  modeSwitch: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 16,
+  },
+  modeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
   modeBtnActive: { backgroundColor: '#000' },
   modeText: { fontSize: 14, fontWeight: '600', color: '#000' },
   modeTextActive: { color: '#fff' },
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', paddingVertical: 16, borderRadius: 14, gap: 8 },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+    paddingVertical: 16,
+    borderRadius: 14,
+    gap: 8,
+  },
   btnDisabled: { backgroundColor: '#e5e5e5' },
   btnText: { fontSize: 16, fontWeight: '600', color: '#fff' },
   btnTextDisabled: { color: '#bbb' },
@@ -1336,31 +1529,43 @@ const styles = StyleSheet.create({
   loadingStatusText: { color: '#fff', marginTop: 10, fontSize: 16 },
   placeholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   placeholderText: { color: '#666', marginTop: 16, fontSize: 16 },
-  loadingClothes: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 8 },
+  loadingClothes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+  },
   loadingText: { color: '#666', fontSize: 14 },
-  errorBox: { backgroundColor: '#fff3cd', padding: 12, marginHorizontal: PADDING, borderRadius: 8, marginBottom: 12 },
+  errorBox: {
+    backgroundColor: '#fff3cd',
+    padding: 12,
+    marginHorizontal: PADDING,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
   errorText: { color: '#856404', fontSize: 14 },
   retryText: { color: '#0066cc', fontSize: 12, marginTop: 4 },
   emptyText: { color: '#999', fontSize: 14, paddingVertical: 20 },
   // Modal styles
-  modalOverlay: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.9)', 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  modalContent: { 
-    width: SCREEN_WIDTH - 40, 
+  modalContent: {
+    width: SCREEN_WIDTH - 40,
     maxHeight: SCREEN_HEIGHT * 0.8,
-    backgroundColor: '#fff', 
-    borderRadius: 20, 
+    backgroundColor: '#fff',
+    borderRadius: 20,
     padding: 20,
     alignItems: 'center',
   },
-  modalClose: { 
-    position: 'absolute', 
-    top: 12, 
-    right: 12, 
+  modalClose: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
     zIndex: 10,
     width: 40,
     height: 40,
@@ -1369,51 +1574,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalImage: { 
-    width: SCREEN_WIDTH - 80, 
-    height: SCREEN_WIDTH - 80, 
+  modalImage: {
+    width: SCREEN_WIDTH - 80,
+    height: SCREEN_WIDTH - 80,
     borderRadius: 16,
     backgroundColor: '#f5f5f5',
     marginTop: 20,
   },
-  modalToggle: { 
-    flexDirection: 'row', 
-    backgroundColor: '#f0f0f0', 
-    borderRadius: 12, 
-    padding: 4, 
+  modalToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    padding: 4,
     marginTop: 20,
     width: '100%',
   },
-  modalToggleBtn: { 
-    flex: 1, 
-    paddingVertical: 12, 
-    borderRadius: 10, 
-    alignItems: 'center' 
+  modalToggleBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
   },
-  modalToggleBtnActive: { 
-    backgroundColor: '#000' 
+  modalToggleBtnActive: {
+    backgroundColor: '#000',
   },
-  modalToggleText: { 
-    fontSize: 15, 
-    fontWeight: '600', 
-    color: '#000' 
+  modalToggleText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000',
   },
-  modalToggleTextActive: { 
-    color: '#fff' 
+  modalToggleTextActive: {
+    color: '#fff',
   },
-  modalInfo: { 
-    marginTop: 16, 
-    alignItems: 'center' 
+  modalInfo: {
+    marginTop: 16,
+    alignItems: 'center',
   },
-  modalInfoText: { 
-    fontSize: 14, 
-    color: '#666' 
+  modalInfoText: {
+    fontSize: 14,
+    color: '#666',
   },
-  modalInfoCategory: { 
-    fontSize: 12, 
-    color: '#999', 
-    textTransform: 'uppercase', 
-    marginTop: 4 
+  modalInfoCategory: {
+    fontSize: 12,
+    color: '#999',
+    textTransform: 'uppercase',
+    marginTop: 4,
   },
   modalDeleteBtn: {
     flexDirection: 'row',

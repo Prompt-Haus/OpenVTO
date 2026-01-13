@@ -2,7 +2,7 @@
 
 export type ImageSource = 'camera' | 'gallery' | 'import';
 
-export type ClothingCategory = 'top' | 'bottom' | 'dress' | 'outerwear' | 'accessories' | 'shoes' | 'full_outfit';
+export type ClothingCategory = 'top' | 'bottom' | 'dress' | 'outerwear' | 'accessories' | 'shoes' | 'full_outfit' | 'shirts' | 'pants' | 'jackets';
 
 export type ClothingSide = 'front' | 'back';
 

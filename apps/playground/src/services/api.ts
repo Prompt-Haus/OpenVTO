@@ -134,20 +134,6 @@ export async function fetchAllClothingItems(): Promise<Omit<ClothingItem, 'id' |
 // Generation API (requires API key)
 // ============================================================================
 
-interface GenerationHeaders {
-  'Content-Type': string;
-  'X-API-Key'?: string;
-}
-
-function getAuthHeaders(): GenerationHeaders {
-  const headers: GenerationHeaders = {
-    'Content-Type': 'application/json',
-  };
-  if (apiConfig.apiKey) {
-    headers['X-API-Key'] = apiConfig.apiKey;
-  }
-  return headers;
-}
 
 interface AvatarGenerationRequest {
   selfie_b64: string;

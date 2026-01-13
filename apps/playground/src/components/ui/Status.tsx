@@ -22,7 +22,6 @@ const statusConfig: Record<
 export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
   const config = statusConfig[status];
   const isProcessing = status === 'processing';
-  const isCompleted = status === 'completed';
 
   const iconSize = size === 'sm' ? 10 : 12;
 

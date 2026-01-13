@@ -116,7 +116,7 @@ export default function SettingsScreen() {
               await AsyncStorage.clear();
               clearAll();
               Alert.alert('Done', 'AsyncStorage cleared. Restart the app for full effect.');
-            } catch (e) {
+            } catch {
               Alert.alert('Error', 'Failed to clear storage');
             }
           }
