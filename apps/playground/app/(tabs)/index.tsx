@@ -746,8 +746,6 @@ export default function TryOnScreen() {
         uri: videoFilePath,
         thumbnail: videoThumbnail,
       });
-
-      Alert.alert('Success', 'Video created successfully!');
     } catch (error) {
       console.error('Video conversion failed:', error);
       Alert.alert('Error', 'Failed to create video. Please try again.');
