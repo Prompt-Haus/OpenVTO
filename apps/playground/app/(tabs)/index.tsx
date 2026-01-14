@@ -44,7 +44,7 @@ import type { ClothingCategory } from '../../src/types';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PADDING = 20;
 const SNAP_TOP = SCREEN_HEIGHT * 0.4;
-const SNAP_BOTTOM = SCREEN_HEIGHT - 180; // More visible when collapsed
+const SNAP_BOTTOM = SCREEN_HEIGHT + 100; // Completely hidden when collapsed
 
 // API Configuration
 const API_BASE_URL = 'http://localhost:8000';
@@ -796,7 +796,7 @@ export default function TryOnScreen() {
           resultType === 'video' ? (
             <Video
               source={{ uri: resultUri }}
-              style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+              style={{ width: SCREEN_WIDTH, height: '100%', position: 'absolute', top: 0 }}
               resizeMode="cover"
               repeat={true}
               paused={false}
@@ -809,7 +809,7 @@ export default function TryOnScreen() {
           ) : (
             <Image
               source={{ uri: resultUri }}
-              style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+              style={{ width: SCREEN_WIDTH, height: '100%', position: 'absolute', top: 0 }}
               resizeMode="cover"
             />
           )
@@ -818,7 +818,7 @@ export default function TryOnScreen() {
             source={{
               uri: avatars.find((a) => a.id === selectedAvatarId)?.image || DEFAULT_AVATAR.image,
             }}
-            style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+            style={{ width: SCREEN_WIDTH, height: '100%', position: 'absolute', top: 0 }}
             resizeMode="cover"
           />
         )}
@@ -1290,7 +1290,13 @@ export default function TryOnScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  resultContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: '#111', zIndex: 0 },
+  resultContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#111',
+    zIndex: 0,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
   videoContainer: {
     flex: 1,
     width: '100%',
