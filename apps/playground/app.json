@@ -1,0 +1,80 @@
+{
+  "expo": {
+    "name": "VTO Playground",
+    "slug": "vto-playground",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "vtoplayground",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vto.playground",
+      "infoPlist": {
+        "NSCameraUsageDescription": "VTO Playground needs camera access to take photos for avatar generation.",
+        "NSPhotoLibraryUsageDescription": "VTO Playground needs access to your photos to create avatars and try-on clothing.",
+        "NSPhotoLibraryAddUsageDescription": "VTO Playground needs permission to save generated images to your photo library."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "package": "com.vto.playground",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ]
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow VTO Playground to access your camera for photo capture."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow VTO Playground to access your photos for avatar creation."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow VTO Playground to save generated images to your photo library.",
+          "savePhotosPermission": "Allow VTO Playground to save photos to your library."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
