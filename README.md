@@ -132,7 +132,7 @@ OpenVTO uses these models from Google Vertex AI by default:
 OpenVTO includes bundled demo assets for quick testing and prototyping. Access them via the `openvto.example` module:
 
 ```python
-from openvto.example import example
+import openvto.example as example
 
 # Get all items in a category
 all_jackets = example.clothes("jackets")
