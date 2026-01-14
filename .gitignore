@@ -120,3 +120,7 @@ Thumbs.db
 .cache/
 tmp/
 temp/
+
+# Local only Jupyter notebooks
+*local.ipynb
+*local_assets*

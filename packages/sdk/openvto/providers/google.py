@@ -23,6 +23,10 @@ from openvto.providers.base import (
 )
 from openvto.types import ImageModel, VideoModel
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 class GoogleProvider(Provider):
     """Google provider using Gemini for images and Veo for video.
@@ -40,7 +44,9 @@ class GoogleProvider(Provider):
        - Set GOOGLE_GENAI_USE_VERTEXAI=true
        - Set GOOGLE_CLOUD_PROJECT to your GCP project ID
        - Set GOOGLE_CLOUD_LOCATION (optional, defaults to us-central1)
-       - Ensure proper GCP authentication (gcloud auth, service account, etc.)
+       - Set credentials via one of:
+         - GOOGLE_APPLICATION_CREDENTIALS: path to service account JSON file
+         - GOOGLE_CREDENTIALS_JSON: service account JSON as a string (for containerized envs)
     """
 
     DEFAULT_IMAGE_MODEL = ImageModel.NANO_BANANA_PRO.value
@@ -77,7 +83,7 @@ class GoogleProvider(Provider):
         Supports two modes:
         - Google AI Studio: Uses GOOGLE_API_KEY
         - Vertex AI: Uses GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION,
-          and GOOGLE_GENAI_USE_VERTEXAI=true
+          GOOGLE_GENAI_USE_VERTEXAI=true andService Account JSON Credentials
         """
         if self._client is None:
             try:
@@ -108,11 +114,43 @@ class GoogleProvider(Provider):
                         provider=self.name,
                     )
 
-                self._client = genai.Client(
-                    vertexai=True,
-                    project=project,
-                    location=location,
+                # Check for credentials: file path or JSON string
+                service_account_json_path = os.environ.get(
+                    "GOOGLE_APPLICATION_CREDENTIALS"
                 )
+                credentials_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+
+                if credentials_json:
+                    # Load credentials from JSON string with required scopes
+                    import json
+
+                    from google.oauth2 import service_account
+
+                    scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+                    credentials = service_account.Credentials.from_service_account_info(
+                        json.loads(credentials_json),
+                        scopes=scopes,
+                    )
+                    self._client = genai.Client(
+                        vertexai=True,
+                        project=project,
+                        location=location,
+                        credentials=credentials,
+                    )
+                elif service_account_json_path:
+                    # Use default credentials from file path
+                    self._client = genai.Client(
+                        vertexai=True,
+                        project=project,
+                        location=location,
+                    )
+                else:
+                    raise ProviderAuthError(
+                        "Vertex AI credentials not found. Set either "
+                        "GOOGLE_APPLICATION_CREDENTIALS (path to JSON file) or "
+                        "GOOGLE_CREDENTIALS_JSON (JSON string) environment variable.",
+                        provider=self.name,
+                    )
             else:
                 # Google AI Studio mode - uses API key
                 if not self._api_key:
@@ -201,11 +239,20 @@ class GoogleProvider(Provider):
 
             aspect_ratio = self._get_aspect_ratio(request.width, request.height)
 
+            # Build contents with proper Content structure
+            contents = [
+                types.Content(
+                    role="user",
+                    parts=[types.Part(text=request.prompt)],
+                )
+            ]
+
             response = client.models.generate_content(
                 model=self._image_model,
-                contents=[request.prompt],
+                contents=contents,
                 config=types.GenerateContentConfig(
-                    temperature=0,
+                    temperature=1,
+                    top_p=0.95,
                     response_modalities=["IMAGE"],
                     image_config=types.ImageConfig(
                         aspect_ratio=aspect_ratio,
@@ -247,10 +294,10 @@ class GoogleProvider(Provider):
 
             aspect_ratio = self._get_aspect_ratio(request.width, request.height)
 
-            # Build content list: prompt + images
-            contents: list = [request.prompt]
+            # Build parts list: images first, then prompt
+            parts: list = []
 
-            # Add reference image (avatar)
+            # Add reference image (posture/body)
             ref_mime_type = self._detect_mime_type(request.reference_image)
             ref_image = types.Part(
                 inline_data=types.Blob(
@@ -258,7 +305,18 @@ class GoogleProvider(Provider):
                     data=request.reference_image,
                 )
             )
-            contents.append(ref_image)
+            parts.append(ref_image)
+
+            # Add selfie image if provided (for identity preservation)
+            if request.selfie_image is not None:
+                selfie_mime_type = self._detect_mime_type(request.selfie_image)
+                selfie_image = types.Part(
+                    inline_data=types.Blob(
+                        mime_type=selfie_mime_type,
+                        data=request.selfie_image,
+                    )
+                )
+                parts.append(selfie_image)
 
             # Add clothing image if provided (for try-on)
             if request.clothing_image is not None:
@@ -269,13 +327,25 @@ class GoogleProvider(Provider):
                         data=request.clothing_image,
                     )
                 )
-                contents.append(clothing_image)
+                parts.append(clothing_image)
+
+            # Add prompt text as last part
+            parts.append(types.Part(text=request.prompt))
+
+            # Build contents with proper Content structure
+            contents = [
+                types.Content(
+                    role="user",
+                    parts=parts,
+                )
+            ]
 
             response = client.models.generate_content(
                 model=self._image_model,
                 contents=contents,
                 config=types.GenerateContentConfig(
-                    temperature=0,
+                    temperature=1,
+                    top_p=0.95,
                     response_modalities=["IMAGE"],
                     image_config=types.ImageConfig(
                         aspect_ratio=aspect_ratio,
@@ -344,7 +414,7 @@ class GoogleProvider(Provider):
                     resolution="720p",
                     duration_seconds=int(request.duration_seconds),
                     generate_audio=False,
-                    # last_frame=request.last_frame, # TODO: Add last frame support
+                    last_frame=formatted_image,
                     # negative_prompt=request.negative_prompt, # TODO: Add negative prompt support
                     # seed=request.seed, # TODO: Add seed support
                 ),

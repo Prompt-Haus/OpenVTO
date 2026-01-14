@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openvto"
-version = "0.1.2"
+version = "0.1.6"
 description = "Open-source toolkit for building studio-quality virtual try-ons with generative AI"
 readme = "README.md"
 license = "MIT"
@@ -68,4 +68,3 @@ select = ["E", "F", "I", "N", "W"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
