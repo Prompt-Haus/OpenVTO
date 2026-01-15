@@ -6,6 +6,8 @@ import os
 import time
 from typing import Any
 
+from dotenv import load_dotenv
+
 from openvto.errors import (
     ModelNotFoundError,
     ProviderAuthError,
@@ -22,8 +24,6 @@ from openvto.providers.base import (
     VideoGenerationResponse,
 )
 from openvto.types import ImageModel, VideoModel
-
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -391,7 +391,6 @@ class GoogleProvider(Provider):
         start = time.perf_counter()
 
         try:
-            import io
             from google.genai import types
 
             # Ensure image is bytes and detect mime type

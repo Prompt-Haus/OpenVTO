@@ -1,10 +1,9 @@
 """Health check endpoints."""
 
-from fastapi import APIRouter
 
 import openvto
+from fastapi import APIRouter
 
-import os
 from app.models import HealthResponse
 
 router = APIRouter(tags=["health"])

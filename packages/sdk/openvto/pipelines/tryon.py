@@ -18,8 +18,6 @@ from openvto.types import (
 )
 from openvto.utils.hashing import short_hash
 from openvto.utils.images import load_image_bytes
-from openvto.utils.timing import Timer
-
 
 # Aspect ratio to dimensions mapping (using 1K resolution)
 ASPECT_RATIO_DIMENSIONS: dict[str, tuple[int, int]] = {
@@ -98,8 +96,6 @@ def generate_tryon(
         ValidationError: If inputs are invalid.
         PipelineError: If generation fails.
     """
-    timer = Timer().start()
-
     # Extract avatar image
     if isinstance(avatar, AvatarResult):
         avatar_bytes = avatar.image
