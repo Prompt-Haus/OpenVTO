@@ -1,7 +1,6 @@
 """Generation endpoints."""
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-
 from openvto import OpenVTO
 
 from app.dependencies import get_vto_client

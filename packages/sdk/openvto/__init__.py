@@ -2,6 +2,8 @@
 
 __version__ = "0.1.6"
 
+# Import example submodule for convenient access via openvto.example
+from openvto import example
 from openvto.client import OpenVTO
 from openvto.types import (
     Avatar,
@@ -19,9 +21,6 @@ from openvto.types import (
     VideoLoopResult,
     VideoModel,
 )
-
-# Import example submodule for convenient access via openvto.example
-from openvto import example
 
 __all__ = [
     "OpenVTO",

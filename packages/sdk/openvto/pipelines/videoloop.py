@@ -6,9 +6,7 @@ from openvto.errors import PipelineError, ValidationError
 from openvto.prompts import load_prompt
 from openvto.providers.base import Provider, VideoGenerationRequest
 from openvto.types import GenerationMeta, TryOnResult, VideoLoopMode, VideoLoopResult
-from openvto.utils.hashing import short_hash
 from openvto.utils.images import get_image_dimensions, load_image_bytes
-from openvto.utils.timing import Timer
 
 
 def generate_videoloop(
@@ -46,8 +44,6 @@ def generate_videoloop(
         ValidationError: If inputs are invalid.
         PipelineError: If generation fails.
     """
-    timer = Timer().start()
-
     # Validate duration
     if seconds < 4 or seconds > 8:
         raise ValidationError(f"Duration must be between 4-8 seconds, got {seconds}")

@@ -4,7 +4,6 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
-
 from openvto import example
 
 from app.models import ClothingCategoriesResponse, ClothingItemsResponse

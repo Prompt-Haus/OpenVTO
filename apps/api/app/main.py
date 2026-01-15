@@ -2,11 +2,10 @@
 
 from contextlib import asynccontextmanager
 
+import openvto
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-import openvto
 from openvto import OpenVTO
 
 from app import dependencies

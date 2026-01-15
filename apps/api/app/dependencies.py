@@ -1,7 +1,6 @@
 """Shared dependencies for the API."""
 
 from fastapi import HTTPException
-
 from openvto import OpenVTO
 
 # Global VTO client instance

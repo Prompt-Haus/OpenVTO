@@ -8,7 +8,6 @@ from openvto.providers.base import ImageGenerationRequest, Provider
 from openvto.types import Avatar, AvatarResult, Background, GenerationMeta
 from openvto.utils.hashing import short_hash
 from openvto.utils.images import load_image_bytes, normalize_for_generation
-from openvto.utils.timing import Timer
 
 
 def generate_avatar(
@@ -52,8 +51,6 @@ def generate_avatar(
         ValidationError: If inputs are invalid.
         PipelineError: If generation fails.
     """
-    timer = Timer().start()
-
     # Resolve background enum
     if isinstance(background, str):
         try:

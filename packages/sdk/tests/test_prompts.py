@@ -20,7 +20,8 @@ class TestPromptLoader:
         """Test loading tryon prompt."""
         config = load_prompt("tryon", "studio_v1")
         assert config.name == "tryon"
-        assert "{clothing_description}" in config.base_prompt
+        assert config.preset == "studio_v1"
+        assert "reference clothing" in config.base_prompt.lower()
 
     def test_load_videoloop_prompt(self):
         """Test loading videoloop prompt."""
@@ -59,8 +60,8 @@ class TestPromptConfig:
         assert "{subject}" not in rendered
 
     def test_render_tryon_with_clothing(self):
-        """Test rendering tryon prompt."""
-        config = load_prompt("tryon", "studio_v1")
+        """Test rendering tryon prompt with catalog preset."""
+        config = load_prompt("tryon", "catalog_v1")
         rendered = config.render(
             subject="the model",
             clothing_description="a white linen shirt and blue jeans",

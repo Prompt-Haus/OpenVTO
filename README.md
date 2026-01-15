@@ -173,6 +173,24 @@ tryon = vto.generate_tryon(
 )
 ```
 
+#### Styling Guidelines
+
+You can provide optional styling context to guide how clothes should fit the avatar:
+
+```python
+tryon = vto.generate_tryon(
+    avatar=avatar,
+    clothes=["coat.jpg", "shirt.jpg", "pants.jpg"],
+    styling={
+        "coat": "knee-length, regular fit",
+        "shirt": "stretchy material, close to the body, no loose folds",
+        "pants": "narrows at the bottom"
+    }
+)
+```
+
+The `styling` parameter accepts a dict (serialized to JSON), a JSON string, or plain text. This context is appended to the generation prompt to provide additional guidance on clothing fit, proportions, and sizing.
+
 ### Video Loop Generation
 
 Turn a static try-on result into an animated 4-8s video loop.
