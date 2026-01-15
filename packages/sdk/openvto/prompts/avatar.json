@@ -15,6 +15,16 @@
                 "instructions": "Make sure to preserve exact facial features, skin tone, hair color and style, body proportions, use both reference images to preserve the identity",
                 "negative": "do not change face shape, do not alter body type, no artificial smoothing"
             },
+            "pose": {
+                "instructions": "{subject} should be standing upright in a natural pose, looking straight at the camera",
+                "hands": "hand and arms should be relaxed at the sides of the body",
+                "legs": "legs should be slightly apart, feet should be flat on the ground",
+                "negative": "crossed legs or arms"
+            },
+            "props": {
+                "instructions": "Make sure to remove any objects that are held by the subject",
+                "negative": "holding any objects like phones, watches, laptops, books, etc."
+            },
             "composition": {
                 "framing": "full body visible, head to toe, centered in frame",
                 "aspect_ratio": "9:16 portrait orientation",

@@ -214,6 +214,7 @@ class OpenVTO:
         compose: bool = True,
         seed: int | None = None,
         aspect_ratio: str | None = None,
+        styling: dict | str | None = None,
         return_type: None = None,
     ) -> TryOnResult: ...
 
@@ -227,6 +228,7 @@ class OpenVTO:
         compose: bool = True,
         seed: int | None = None,
         aspect_ratio: str | None = None,
+        styling: dict | str | None = None,
         return_type: Literal["result"],
     ) -> TryOnResult: ...
 
@@ -240,6 +242,7 @@ class OpenVTO:
         compose: bool = True,
         seed: int | None = None,
         aspect_ratio: str | None = None,
+        styling: dict | str | None = None,
         return_type: Literal["pil"],
     ) -> PILImage: ...
 
@@ -253,6 +256,7 @@ class OpenVTO:
         compose: bool = True,
         seed: int | None = None,
         aspect_ratio: str | None = None,
+        styling: dict | str | None = None,
         return_type: Literal["bytes"],
     ) -> bytes: ...
 
@@ -265,6 +269,7 @@ class OpenVTO:
         compose: bool = True,
         seed: int | None = None,
         aspect_ratio: str | None = None,
+        styling: dict | str | None = None,
         return_type: TryOnReturnType | None = None,
     ) -> TryOnResult | PILImage | bytes:
         """Generate virtual try-on with clothing on avatar.
@@ -277,6 +282,10 @@ class OpenVTO:
             seed: Random seed for reproducibility.
             aspect_ratio: Output aspect ratio (e.g., "9:16", "16:9", "1:1", "4:3", "3:4").
                 If None, uses avatar dimensions or defaults to "9:16".
+            styling: Optional clothing fit/proportions/sizing context appended to prompt.
+                Can be a dict (serialized to JSON), a JSON string, or plain text.
+                Use to provide additional guidance on how clothes should fit the avatar
+                (e.g., {"coat": "knee-length", "pants": "slim fit"}).
             return_type: How to return the result:
                 - None or "result" (default): Return full TryOnResult object
                 - "pil": Return as PIL Image
@@ -294,6 +303,7 @@ class OpenVTO:
             compose=compose,
             seed=seed,
             aspect_ratio=aspect_ratio,
+            styling=styling,
         )
 
         # Handle return type conversion

@@ -9,6 +9,7 @@ from openvto.pipelines import (
     generate_tryon,
     generate_videoloop,
 )
+from openvto.pipelines.tryon import _format_styling
 from openvto.providers import MockProvider
 from openvto.types import ClothingItem, Outfit
 
@@ -48,6 +49,43 @@ def create_test_image() -> bytes:
     iend = struct.pack(">I", 0) + b"IEND" + struct.pack(">I", iend_crc)
 
     return signature + ihdr + idat + iend
+
+
+class TestFormatStyling:
+    """Tests for _format_styling helper function."""
+
+    def test_format_styling_none(self):
+        """Test that None returns None."""
+        assert _format_styling(None) is None
+
+    def test_format_styling_dict(self):
+        """Test dict is serialized to JSON."""
+        spec = {"coat": "knee-length", "pants": "slim fit"}
+        result = _format_styling(spec)
+
+        assert result is not None
+        assert result.startswith("\n\n[clothing_styling_guidelines]\n")
+        assert result.endswith("\n[/clothing_styling_guidelines]\n")
+        assert '"coat": "knee-length"' in result
+        assert '"pants": "slim fit"' in result
+
+    def test_format_styling_list(self):
+        """Test list is serialized to JSON."""
+        spec = ["coat should be knee-length", "pants should be slim fit"]
+        result = _format_styling(spec)
+
+        assert result is not None
+        assert "[clothing_styling_guidelines]" in result
+        assert "coat should be knee-length" in result
+
+    def test_format_styling_string(self):
+        """Test string is used as-is."""
+        spec = "The coat should be knee-length with a regular fit."
+        result = _format_styling(spec)
+
+        assert result is not None
+        assert "[clothing_styling_guidelines]" in result
+        assert spec in result
 
 
 class TestGenerateAvatar:
@@ -108,6 +146,63 @@ class TestGenerateTryon:
         assert result.try_on is not None
         assert result.image is not None
         assert result.meta is not None
+
+    def test_generate_tryon_with_styling_dict(self):
+        """Test try-on with styling parameter as dict."""
+        provider = MockProvider(latency_ms=1)
+        test_image = create_test_image()
+
+        styling = {
+            "coat": "knee-length, regular fit",
+            "shirt": "stretchy material, close to the body",
+            "pants": "narrows at the bottom",
+        }
+
+        result = generate_tryon(
+            avatar=test_image,
+            clothes=[test_image],
+            provider=provider,
+            styling=styling,
+        )
+
+        assert result.try_on is not None
+        # Check that styling was appended to prompt
+        assert "[clothing_styling_guidelines]" in result.meta.prompt
+        assert "knee-length" in result.meta.prompt
+        assert "[/clothing_styling_guidelines]" in result.meta.prompt
+
+    def test_generate_tryon_with_styling_string(self):
+        """Test try-on with styling parameter as string."""
+        provider = MockProvider(latency_ms=1)
+        test_image = create_test_image()
+
+        styling = "The coat should be knee-length with a regular fit."
+
+        result = generate_tryon(
+            avatar=test_image,
+            clothes=[test_image],
+            provider=provider,
+            styling=styling,
+        )
+
+        assert result.try_on is not None
+        assert "[clothing_styling_guidelines]" in result.meta.prompt
+        assert "knee-length with a regular fit" in result.meta.prompt
+
+    def test_generate_tryon_without_styling(self):
+        """Test try-on without styling parameter (default behavior)."""
+        provider = MockProvider(latency_ms=1)
+        test_image = create_test_image()
+
+        result = generate_tryon(
+            avatar=test_image,
+            clothes=[test_image],
+            provider=provider,
+        )
+
+        assert result.try_on is not None
+        # Ensure no styling block when not provided
+        assert "[clothing_styling_guidelines]" not in result.meta.prompt
 
     def test_generate_tryon_with_clothing_items(self):
         """Test try-on with ClothingItem objects."""

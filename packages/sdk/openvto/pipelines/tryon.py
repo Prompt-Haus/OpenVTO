@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from openvto.errors import PipelineError, ValidationError
 from openvto.pipelines.composer import compose_clothing
 from openvto.prompts import load_prompt
@@ -29,6 +31,30 @@ ASPECT_RATIO_DIMENSIONS: dict[str, tuple[int, int]] = {
 }
 
 
+def _format_styling(spec: dict | list | str | None) -> str | None:
+    """Format styling specification as a prompt appendix block.
+
+    Args:
+        spec: Styling specification. Can be:
+            - None: Returns None (no appendix)
+            - dict/list: Serialized to JSON with indentation
+            - str: Used as-is (JSON string or plain text)
+
+    Returns:
+        Formatted appendix block with [clothing_styling_guidelines] tags,
+        or None if spec is None.
+    """
+    if spec is None:
+        return None
+
+    if isinstance(spec, (dict, list)):
+        content = json.dumps(spec, indent=2)
+    else:
+        content = str(spec)
+
+    return f"\n\n[clothing_styling_guidelines]\n{content}\n[/clothing_styling_guidelines]\n"
+
+
 def generate_tryon(
     avatar: AvatarResult | bytes | str,
     clothes: list[ClothingItem] | Outfit | list[str] | list[bytes],
@@ -39,6 +65,7 @@ def generate_tryon(
     compose: bool = True,
     seed: int | None = None,
     aspect_ratio: str | None = None,
+    styling: dict | str | None = None,
 ) -> TryOnResult:
     """Generate virtual try-on with clothing on avatar.
 
@@ -59,6 +86,10 @@ def generate_tryon(
         seed: Random seed for reproducibility.
         aspect_ratio: Output aspect ratio (e.g., "9:16", "16:9", "1:1", "4:3", "3:4").
             If None, uses avatar dimensions or defaults to "9:16".
+        styling: Optional clothing fit/proportions/sizing context appended to prompt.
+            Can be a dict (serialized to JSON), a JSON string, or plain text.
+            Use to provide additional guidance on how clothes should fit the avatar
+            (e.g., {"coat": "knee-length", "pants": "slim fit"}).
 
     Returns:
         TryOnResult with generated try-on and metadata.
@@ -115,6 +146,11 @@ def generate_tryon(
             subject="the person",
             clothing_description=clothing_description,
         )
+
+    # Append styling guidelines if provided
+    styling_appendix = _format_styling(styling)
+    if styling_appendix:
+        prompt += styling_appendix
 
     # Create generation request
     request = ImageGenerationRequest(
