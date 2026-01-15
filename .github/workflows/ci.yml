@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  sdk-test:
+    name: SDK Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        working-directory: packages/sdk
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint with ruff
+        working-directory: packages/sdk
+        run: |
+          ruff check .
+
+      - name: Test with pytest
+        working-directory: packages/sdk
+        run: |
+          pytest -v
+
+  api-test:
+    name: API Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SDK
+        working-directory: packages/sdk
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: |
+          pip install -e ".[dev]"
+
+      - name: Lint with ruff
+        working-directory: apps/api
+        run: |
+          ruff check .
+
+  playground-lint:
+    name: Playground Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install dependencies
+        working-directory: apps/playground
+        run: pnpm install
+
+      - name: Lint
+        working-directory: apps/playground
+        run: pnpm lint
+

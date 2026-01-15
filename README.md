@@ -10,6 +10,23 @@ OpenVTO is designed for **speed**, **consistency**, and **aesthetics**: uniform 
 
 ---
 
+## Monorepo Structure
+
+```
+OpenVTO/
+├── packages/
+│   └── sdk/                 # Python SDK (pip install openvto)
+├── apps/
+│   ├── api/                 # FastAPI server
+│   └── playground/          # React Native mobile app
+├── examples/                # Jupyter notebooks & examples
+├── package.json             # Root package.json (pnpm workspaces)
+├── pnpm-workspace.yaml      # Workspace configuration
+└── turbo.json               # Turborepo configuration
+```
+
+---
+
 ## Goal
 
 OpenVTO's goal is simple: **make it easy for teams to ship virtual try-ons that look good enough to market, not just "tech demos."**
@@ -30,9 +47,32 @@ OpenVTO's goal is simple: **make it easy for teams to ship virtual try-ons that 
 
 ## Installation
 
+### SDK Only
+
 ```bash
 pip install openvto
 ```
+
+### Full Monorepo Development
+
+```bash
+# Clone the repository
+git clone https://github.com/Prompt-Haus/OpenVTO.git
+cd OpenVTO
+
+# Install Node.js dependencies (for playground)
+pnpm install
+
+# Install Python SDK in development mode
+cd packages/sdk
+pip install -e ".[dev]"
+
+# Install API dependencies
+cd ../../apps/api
+pip install -e ".[dev]"
+```
+
+---
 
 ## Google Vertex AI Setup
 
@@ -46,6 +86,8 @@ export GOOGLE_CLOUD_PROJECT="your-project-id"
 export GOOGLE_CLOUD_LOCATION="us-central1"
 export GOOGLE_GENAI_USE_VERTEXAI="true"
 ```
+
+---
 
 ## Quick Start
 
@@ -75,6 +117,34 @@ video = vto.generate_videoloop(
     mode="turn_360",
     return_type="b64"
 )
+```
+
+---
+
+## Running the Apps
+
+### API Server
+
+```bash
+# From repository root
+pnpm api
+
+# Or directly
+cd apps/api
+uvicorn app.main:app --reload
+```
+
+The API will be available at `http://localhost:8000`.
+
+### Mobile Playground
+
+```bash
+# From repository root
+pnpm playground dev
+
+# Or directly
+cd apps/playground
+pnpm dev
 ```
 
 ---
@@ -132,7 +202,7 @@ OpenVTO uses these models from Google Vertex AI by default:
 OpenVTO includes bundled demo assets for quick testing and prototyping. Access them via the `openvto.example` module:
 
 ```python
-from openvto.example import example
+import openvto.example as example
 
 # Get all items in a category
 all_jackets = example.clothes("jackets")
@@ -179,15 +249,31 @@ img = example.clothes("jackets", i=1, view="front", return_type="pil")
 
 ---
 
-## FastAPI Example
+## Development
 
-OpenVTO includes a FastAPI example server. To run it, use the following command:
+### Running Tests
 
 ```bash
-uvicorn fastapi.app.main:app --reload
+# SDK tests
+cd packages/sdk
+pytest
+
+# Or from root
+pnpm sdk:test
 ```
 
-Then, you can access the API at `http://localhost:8000`.
+### Linting
+
+```bash
+# SDK
+pnpm sdk:lint
+
+# Playground
+pnpm playground lint
+
+# Format TypeScript/JavaScript
+pnpm format
+```
 
 ---
 
