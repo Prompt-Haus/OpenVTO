@@ -32,7 +32,11 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Image Processing",
 ]
-dependencies = []
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "google-genai>=1.0.0",
+    "google-auth>=2.0.0",
+]
 
 [project.optional-dependencies]
 dev = [
