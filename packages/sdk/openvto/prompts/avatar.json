@@ -12,7 +12,7 @@
                 "quality": "high-end fashion editorial, magazine quality, 8K resolution"
             },
             "identity_preservation": {
-                "instructions": "Make sure to preserve exact facial features, skin tone, hair color and style, body proportions, use both reference images to preserve the identity",
+                "instructions": "Make sure to preserve exact facial features, skin tone, hair color and style, body proportions, from relevant reference images to preserve the identity",
                 "negative": "do not change face shape, do not alter body type, no artificial smoothing"
             },
             "pose": {
@@ -24,6 +24,10 @@
             "props": {
                 "instructions": "Make sure to remove any objects that are held by the subject",
                 "negative": "holding any objects like phones, watches, laptops, books, etc."
+            },
+            "reference_images": {
+                "instructions_posture": "Use the posture reference image to guide ONLY proportions of the body, from neck down. Ignore facial features from the posture image.",
+                "instructions_selfie": "Use the selfie reference image to guide ONLY the facial features and identity of the subject, from neck up."
             },
             "composition": {
                 "framing": "full body visible, head to toe, centered in frame",
